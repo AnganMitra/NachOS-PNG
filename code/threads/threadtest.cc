@@ -25,10 +25,13 @@ void
 SimpleThread (int which)
 {
     int num;
+    currentThread->state =0;
 
     for (num = 0; num < 5; num++)
       {
+    printf("Hello Nachos %d\n", num);
 	  printf ("*** thread %d looped %d times\n", which, num);
+    currentThread->state=(currentThread->state+1)%2;
 	  currentThread->Yield ();
       }
 }
@@ -47,5 +50,7 @@ ThreadTest ()
     Thread *t = new Thread ("forked thread");
 
     t->Fork (SimpleThread, 1);
-    SimpleThread (0);
+    Thread *at = new Thread( "Newly forked thread");
+    at->Fork(SimpleThread, 3);
+    SimpleThread (221);
 }

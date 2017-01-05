@@ -29,10 +29,17 @@ SynchDisk *synchDisk;
 
 #ifdef USER_PROGRAM		// requires either FILESYS or FILESYS_STUB
 Machine *machine;		// user program memory and registers
+SynchConsole *synchconsole;
 #endif
 
 #ifdef NETWORK
 PostOffice *postOffice;
+#endif
+ 
+#ifdef CHANGED           // the following changes are made to include the synch console in to a system call.
+#ifdef USER_PROGRAM
+SynchConsole *synchconsole;
+#endif
 #endif
 
 
@@ -186,6 +193,7 @@ Cleanup ()
 
 #ifdef USER_PROGRAM
     delete machine;
+    delete synchconsole;
 #endif
 
 #ifdef FILESYS_NEEDED

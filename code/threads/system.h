@@ -15,7 +15,7 @@
 #include "interrupt.h"
 #include "stats.h"
 #include "timer.h"
-
+#define MAX_STRING_SIZE 100
 // Initialization and cleanup routines
 extern void Initialize (int argc, char **argv);	// Initialization,
 						// called before anything else
@@ -32,6 +32,8 @@ extern Timer *timer;		// the hardware alarm clock
 #ifdef USER_PROGRAM
 #include "machine.h"
 extern Machine *machine;	// user program memory and registers
+#include "synchconsole.h"
+extern SynchConsole *synchconsole;
 #endif
 
 #ifdef FILESYS_NEEDED		// FILESYS or FILESYS_STUB
@@ -48,5 +50,7 @@ extern SynchDisk *synchDisk;
 #include "post.h"
 extern PostOffice *postOffice;
 #endif
+
+
 
 #endif // SYSTEM_H

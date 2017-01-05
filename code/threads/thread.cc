@@ -196,6 +196,8 @@ Thread::Finish ()
 void
 Thread::Yield ()
 {
+    if (currentThread->state==1)
+      return;
     Thread *nextThread;
     IntStatus oldLevel = interrupt->SetLevel (IntOff);
 

@@ -83,6 +83,7 @@ class Thread
     int machineState[MachineStateSize];	// all registers except for stackTop
 
   public:
+    int state; // to cease call to yield after two calls  -- modification by A.Prime
       Thread (const char *debugName);	// initialize a Thread 
      ~Thread ();		// deallocate a Thread
     // NOTE -- thread being deleted
