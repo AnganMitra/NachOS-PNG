@@ -78,9 +78,13 @@ void SynchConsole::SynchPutInt( int n)
 
 void SynchConsole::SynchGetInt(int* n)   
 {
+	int temp;
 	char* input = new char[MAX_STRING_SIZE];
 	SynchGetString(input, MAX_STRING_SIZE);
-	sscanf(input,"%d",n);
+
+	sscanf(input,"%d",&temp);
+	machine->WriteMem((int)n, sizeof(int), temp);
+	//fprintf(stderr, "hi %d\n", *n);
 	delete(input);
 	return;
 }	

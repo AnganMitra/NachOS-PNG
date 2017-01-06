@@ -46,7 +46,7 @@ copyStringFromMachine(int from,char* to, unsigned int size)
   unsigned int i;
   bool flag;
   for(i=0;i<size;i++){
-    flag=machine->ReadMem(from+i, (int)sizeof(char),(int*)to+i );
+    flag=machine->ReadMem(from+i, (int)sizeof(char),(int*)(to+(int)i) );
     if(flag!=true){
       break;
     }
@@ -137,10 +137,12 @@ ExceptionHandler (ExceptionType which)
           break;
         }
         case SC_GetChar:{
-          DEBUG('a', "Printing of a character, initiated by user program.\n");
+          DEBUG('a', "Getting of a character, initiated by user program.\n");
           char ch;  
+          int n = (int )machine->ReadRegister(4);
           ch=synchconsole->SynchGetChar();
-          machine->WriteRegister(ch,2);
+          machine->WriteMem((int)n, sizeof(char), ch);
+          
           break;
         }
         case SC_GetString:{
@@ -167,9 +169,10 @@ ExceptionHandler (ExceptionType which)
         case SC_GetInt:{
           DEBUG('a', "Getting of a string, initiated by user program.\n");
 
-          int* n = (int *)machine->ReadRegister(4);
-          synchconsole->SynchGetInt(n);
-
+          int n = (int )machine->ReadRegister(4);
+          //fprintf(stderr, "%d\n",*n );
+          synchconsole->SynchGetInt((int *)n);
+          //fprintf(stderr, "%d\n",*n );
           break;
         }
         case SC_PutInt:{
