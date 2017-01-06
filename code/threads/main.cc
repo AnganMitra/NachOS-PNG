@@ -58,7 +58,7 @@
 
 extern void ThreadTest (void), Copy (const char *unixFile, const char *nachosFile);
 extern void Print (char *file), PerformanceTest (void);
-extern void StartProcess (char *file), ConsoleTest (char *in, char *out);
+extern void StartProcess (char *file), ConsoleTest (char *in, char *out), SynchConsoleTest(char* in , char* out);
 extern void MailTest (int networkID);
 
 //----------------------------------------------------------------------
@@ -100,6 +100,7 @@ main (int argc, char **argv)
 		StartProcess (*(argv + 1));
 		argCount = 2;
 	    }
+	  #ifdef CHANGED
 	  else if (!strcmp (*argv, "-sc"))   // modifications by A. Prime
 	  {
 	  	if (argc == 1)
@@ -114,6 +115,7 @@ main (int argc, char **argv)
 		// Nachos will loop forever waiting 
 		// for console input
 	  }
+	  #endif
 	  else if (!strcmp (*argv, "-c"))
 	    {			// test the console
 		if (argc == 1)

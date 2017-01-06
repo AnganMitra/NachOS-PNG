@@ -3,6 +3,8 @@
 #include "system.h"
 #include "synchconsole.h"
 #include "synch.h"
+#include "console.h"
+
 static Semaphore *readAvail;
 static Semaphore *writeDone;
 static void ReadAvail(int arg) { readAvail->V(); }
@@ -10,27 +12,24 @@ static void WriteDone(int arg) { writeDone->V(); }
 
 SynchConsole::SynchConsole(char *readFile, char *writeFile)
 {
-readAvail = new Semaphore("read avail", 0);
-writeDone = new Semaphore("write done", 0);
-console =  new Console (in, out, ReadAvail, WriteDone, 0);
+	readAvail = new Semaphore("read avail", 0);
+	writeDone = new Semaphore("write done", 0);
+	console =  new Console (readFile, writeFile, ReadAvail, WriteDone, 0); // modified on 6/1
 }
 SynchConsole::~SynchConsole()
 {
-delete console;
-delete writeDone;
-delete readAvail;
+	delete console;
+	delete writeDone;
+	delete readAvail;
 }
 
-void copyStringFromMachine ( int from, char* to, unsigned int size){
 
-
-}
 
 void SynchConsole::SynchPutChar(const char ch)
 {
 // ...
 	console->PutChar(ch);
-	writeDone->PutChar(ch);
+	writeDone->P();
 	return;
 }
 char SynchConsole::SynchGetChar()
@@ -60,7 +59,7 @@ void SynchConsole::SynchGetString(char *s, int n)
 	for (i=0; i< n-1;i++){
 		readAvail->P();
 		ch= console->GetChar();
-		if(ch=EOF||ch='\n')
+		if(ch==EOF||ch=='\n')
 			break;
 		s[i]=ch;
 	}
@@ -69,18 +68,20 @@ void SynchConsole::SynchGetString(char *s, int n)
 }
 void SynchConsole::SynchPutInt( int n)
 {
-	char output[MAX_STRING_SIZE];
-	snprintf(output,sizeof(int),"%s" );
+	char* output = new char[MAX_STRING_SIZE];
+	snprintf(output,MAX_STRING_SIZE,"%d",n );
 	SynchPutString(output);
-	//free(output);
+	delete(output);
+	return;
 
 }
 
 void SynchConsole::SynchGetInt(int* n)   
 {
-	char input[MAX_STRING_SIZE];
+	char* input = new char[MAX_STRING_SIZE];
 	SynchGetString(input, MAX_STRING_SIZE);
 	sscanf(input,"%d",n);
+	delete(input);
 	return;
-}
-#endif // CHANGED
+}	
+#endif

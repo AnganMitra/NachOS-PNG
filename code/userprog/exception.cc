@@ -24,7 +24,7 @@
 #include "copyright.h"
 #include "system.h"
 #include "syscall.h"
-
+//#include "synchconsole.h"
 //----------------------------------------------------------------------
 // UpdatePC : Increments the Program Counter register in order to resume
 // the user program immediately after the "syscall" instruction.
@@ -40,6 +40,45 @@ UpdatePC ()
     machine->WriteRegister (NextPCReg, pc);
 }
 
+void 
+copyStringFromMachine(int from,char* to, unsigned int size)
+{
+  unsigned int i;
+  bool flag;
+  for(i=0;i<size;i++){
+    flag=machine->ReadMem(from+i, (int)sizeof(char),(int*)to+i );
+    if(flag!=true){
+      break;
+    }
+  }  
+  machine->WriteMem((int)to+i, (int)sizeof(char), EOF );
+  return;
+ 
+}
+/*
+    bool ReadMem(int addr, int size, int* value);
+    bool WriteMem(int addr, int size, int value);
+*/
+void 
+copyStringToMachine(char* from, int to, unsigned int size)
+{
+  unsigned int i;
+  bool flag;
+  char ch;
+  for(i=0;i<size;i++){
+    ch = from [i];
+    if(ch == EOF )
+      break;
+    flag=machine->WriteMem(to+i, sizeof(char),ch );
+    if(flag!=true){
+      break;
+    }
+  }
+  
+  machine->WriteMem((int)to+i, sizeof(char), EOF );
+  return;
+ 
+}
 
 //----------------------------------------------------------------------
 // ExceptionHandler
@@ -79,21 +118,66 @@ ExceptionHandler (ExceptionType which)
 	  printf ("Unexpected user mode exception %d %d\n", which, type);
 	  ASSERT (FALSE);
       }
+      
+  
     #else
-    // LB: Do not forget to increment the pc before returning!
-    //UpdatePC ();
-    // End of addition
+
     if (which == SyscallException) {
       switch (type) {
         case SC_Halt: {
-          DEBUG(’a’, "Shutdown, initiated by user program.\n");
+          DEBUG('a', "Shutdown, initiated by user program.\n");
           interrupt->Halt();
           break;
         }
         case SC_PutChar: {
-          DEBUG(’a’, "Printing of a character, initiated by user program.\n");
-          // what more to put here?
+          DEBUG('a', "Printing of a character, initiated by user program.\n");
+          char ch;
+          ch = machine->ReadRegister(4);    // since the character is in register 4
+          synchconsole->SynchPutChar(ch);
+          break;
+        }
+        case SC_GetChar:{
+          DEBUG('a', "Printing of a character, initiated by user program.\n");
+          char ch;  
+          ch=synchconsole->SynchGetChar();
+          machine->WriteRegister(ch,2);
+          break;
+        }
+        case SC_GetString:{
+          DEBUG('a', "Getting of a character, initiated by user program.\n");
           
+          int to= (int)machine->ReadRegister(4);
+          unsigned int size= machine->ReadRegister(5);
+          char* temp= new char[MAX_STRING_SIZE];
+          synchconsole->SynchGetString(temp, size);
+          copyStringToMachine(temp, to, size);
+          delete(temp);
+          break;
+        }
+        case SC_PutString:{
+          DEBUG('a', "Printing of a string, initiated by user program.\n");
+          int from = machine->ReadRegister(4);
+          unsigned int size= MAX_STRING_SIZE;
+          char* to = new char[MAX_STRING_SIZE];   // to is the temporary string to copy
+          copyStringFromMachine(from, to, size);
+          synchconsole->SynchPutString(to);
+          delete(to);
+          break;
+        }
+        case SC_GetInt:{
+          DEBUG('a', "Getting of a string, initiated by user program.\n");
+
+          int* n = (int *)machine->ReadRegister(4);
+          synchconsole->SynchGetInt(n);
+
+          break;
+        }
+        case SC_PutInt:{
+          DEBUG('a', "Printing of an integer, initiated by user program.\n");
+
+          int n = machine->ReadRegister(4);
+          synchconsole->SynchPutInt(n);
+
           break;
         }
         default: {
@@ -101,8 +185,10 @@ ExceptionHandler (ExceptionType which)
           ASSERT(FALSE);
         }
         }
+      
+      }
+      
+    #endif // CHANGED 
       UpdatePC();
-      }
-      }
-      #endif // CHANGED
 }
+ 

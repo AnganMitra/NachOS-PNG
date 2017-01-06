@@ -29,19 +29,21 @@ SynchDisk *synchDisk;
 
 #ifdef USER_PROGRAM		// requires either FILESYS or FILESYS_STUB
 Machine *machine;		// user program memory and registers
+#ifdef CHANGED
 SynchConsole *synchconsole;
+#endif
 #endif
 
 #ifdef NETWORK
 PostOffice *postOffice;
 #endif
- 
+ /*
 #ifdef CHANGED           // the following changes are made to include the synch console in to a system call.
 #ifdef USER_PROGRAM
 SynchConsole *synchconsole;
 #endif
 #endif
-
+*/
 
 // External definition, to allow us to take a pointer to this function
 extern void Cleanup ();
@@ -158,12 +160,15 @@ Initialize (int argc, char **argv)
     // object to save its state. 
     currentThread = new Thread ("main");
     currentThread->setStatus (RUNNING);
-
+    //synchconsole = new SynchConsole(NULL,NULL);
     interrupt->Enable ();
     CallOnUserAbort (Cleanup);	// if user hits ctl-C
 
 #ifdef USER_PROGRAM
     machine = new Machine (debugUserProg);	// this must come first
+    #ifdef CHANGED
+    synchconsole = new SynchConsole(NULL,NULL);
+    #endif
 #endif
 
 #ifdef FILESYS
@@ -193,7 +198,9 @@ Cleanup ()
 
 #ifdef USER_PROGRAM
     delete machine;
+    #ifdef CHANGED
     delete synchconsole;
+    #endif
 #endif
 
 #ifdef FILESYS_NEEDED

@@ -29,7 +29,15 @@
 #define SC_Close	8
 #define SC_Fork		9
 #define SC_Yield	10
-#define SC_PutChar 11   // Introduce the system call number for the putchar call to be successful.
+
+#define SC_PutChar 11   // Introduce the system call number for the putchar call.
+#define SC_PutString 12
+
+#define SC_GetChar 13
+#define SC_GetString 14
+
+#define SC_PutInt 15
+#define SC_GetInt 16
 
 #ifdef IN_USER_MODE
 
@@ -131,8 +139,28 @@ void Yield ();
 /*
 This code is used to have the putchar as a system call in place. Modified by Angan.
 */
-void function PutChar(char c);
+#ifdef CHANGED
+void PutChar(char c);
+void PutString(char* c);
+
+char GetChar();
+char GetString(char* to, unsigned int size);
+
+void PutInt(int n);
+void GetInt(int* n);
+#endif
 
 #endif // IN_USER_MODE
 
 #endif /* SYSCALL_H */
+/*
+#define SC_PutChar 11
+#define SC_PutString 12
+
+#define SC_GetChar 13
+#define SC_GetString 14
+
+#define SC_PutInt 15
+#define SC_PutInt 16
+
+*/
