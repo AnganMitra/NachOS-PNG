@@ -143,7 +143,7 @@ This code is used to have the putchar as a system call in place. Modified by Ang
 void PutChar(char c);
 void PutString(char* c);
 
-char GetChar();
+char GetChar(char* ch);
 char GetString(char* to, unsigned int size);
 
 void PutInt(int n);

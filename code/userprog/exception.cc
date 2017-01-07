@@ -43,15 +43,22 @@ UpdatePC ()
 void 
 copyStringFromMachine(int from,char* to, unsigned int size)
 {
-  unsigned int i;
+  int i;
   bool flag;
-  for(i=0;i<size;i++){
+  
+  for(i=0;i<(int)size-1;){
     flag=machine->ReadMem(from+i, (int)sizeof(char),(int*)(to+(int)i) );
+    /*
     if(flag!=true){
       break;
     }
+    */
+    ASSERT(flag==true);
+    i++;
   }  
-  machine->WriteMem((int)to+i, (int)sizeof(char), EOF );
+  //char ch = '\0';
+  //flag=machine->WriteMem((int)to+(int)i, (int)sizeof(char), int(ch) );
+  ASSERT(flag==true);
   return;
  
 }
@@ -70,12 +77,11 @@ copyStringToMachine(char* from, int to, unsigned int size)
     if(ch == EOF )
       break;
     flag=machine->WriteMem(to+i, sizeof(char),ch );
-    if(flag!=true){
-      break;
-    }
+    ASSERT(flag==true);
   }
   
   machine->WriteMem((int)to+i, sizeof(char), EOF );
+  ASSERT(flag==true);
   return;
  
 }
@@ -105,8 +111,10 @@ copyStringToMachine(char* from, int to, unsigned int size)
 
 void
 ExceptionHandler (ExceptionType which)
-{
+{ 
+
     int type = machine->ReadRegister (2);
+    //fprintf(stderr, "\nSC: %d %d\n",which,type );
     #ifndef CHANGED 
     if ((which == SyscallException) && (type == SC_Halt))
       {
@@ -122,7 +130,7 @@ ExceptionHandler (ExceptionType which)
   
     #else
 
-    if (which == SyscallException) {
+    if (which == SyscallException ) {
       switch (type) {
         case SC_Halt: {
           DEBUG('a', "Shutdown, initiated by user program.\n");
@@ -150,8 +158,9 @@ ExceptionHandler (ExceptionType which)
           
           int to= (int)machine->ReadRegister(4);
           unsigned int size= machine->ReadRegister(5);
-          char* temp= new char[MAX_STRING_SIZE];
+          char* temp= new char[size];
           synchconsole->SynchGetString(temp, size);
+          //fprintf(stderr, "%s\n", temp);
           copyStringToMachine(temp, to, size);
           delete(temp);
           break;
@@ -159,11 +168,35 @@ ExceptionHandler (ExceptionType which)
         case SC_PutString:{
           DEBUG('a', "Printing of a string, initiated by user program.\n");
           int from = machine->ReadRegister(4);
+          int i;
+          int  value;
+          /*ReadMem(int addr, int size, int* value)*/
+          for(i=0; ;i++)
+          {
+            machine->ReadMem(from +i, (int)sizeof(char), &value);
+            if ((char)value=='\0')
+              break;
+          }
+          int max_length =i;
           unsigned int size= MAX_STRING_SIZE;
-          char* to = new char[MAX_STRING_SIZE];   // to is the temporary string to copy
-          copyStringFromMachine(from, to, size);
-          synchconsole->SynchPutString(to);
+          char* to = new char[size];   // to is the temporary string to copy
+          for(i=0; ;)
+          {
+            copyStringFromMachine(from+i, to, size);
+            synchconsole->SynchPutString(to);
+            
+            if(i< max_length )
+              i=i+MAX_STRING_SIZE-1;
+            else
+              break;
+           // fprintf(stderr, "len:%d %d\n",i,max_length );
+            
+          }
+          //fprintf(stderr, "ps ended\n" );
+          synchconsole->SynchPutChar('\n');
+
           delete(to);
+          //fprintf(stderr, "ps ended\n" );
           break;
         }
         case SC_GetInt:{
@@ -178,7 +211,7 @@ ExceptionHandler (ExceptionType which)
         case SC_PutInt:{
           DEBUG('a', "Printing of an integer, initiated by user program.\n");
 
-          int n = machine->ReadRegister(4);
+          int n =(int) machine->ReadRegister(4);
           synchconsole->SynchPutInt(n);
 
           break;

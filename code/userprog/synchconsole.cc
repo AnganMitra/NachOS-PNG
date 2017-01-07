@@ -46,9 +46,10 @@ void SynchConsole::SynchPutString(const char s[])
 // ...
 	int i;
 	 for( i=0; s[i]!='\0';i++){
-	 	console->PutChar(s[i]);	
-	 	writeDone->P ();	// wait for write to finish
+	 	SynchPutChar(s[i]);	// wait for write to finish
 	 }
+	 //console->PutChar('\n');	
+	 //writeDone->P ();
 	 return;
 }
 void SynchConsole::SynchGetString(char *s, int n)
@@ -64,6 +65,7 @@ void SynchConsole::SynchGetString(char *s, int n)
 		s[i]=ch;
 	}
 	s[i]= '\0';
+
 	return;
 }
 void SynchConsole::SynchPutInt( int n)

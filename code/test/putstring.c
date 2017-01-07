@@ -1,12 +1,9 @@
 #include "syscall.h"
-void print(char* c){
-	
-	PutString(c);
-	
-}
+
 int main(){
-	char input[10]="Hello";
-	print(input);
+	char input[20]="sdfgsdjgfdaufbd";
+	PutString(input);
+	PutString("sadgvskjhfvesdjkfvbdsavlhjsvfldsjfbv sdlzxkfjvbislgfbeshbkvdm,fbz,xjvbz");
 	Halt();
 
 }
