@@ -1,0 +1,1 @@
+extern int so_UserThreadCreate(int f, int arg);

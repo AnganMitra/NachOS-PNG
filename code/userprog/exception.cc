@@ -24,7 +24,9 @@
 #include "copyright.h"
 #include "system.h"
 #include "syscall.h"
+#include "userthread.h"
 //#include "synchconsole.h"
+#define THREADNAME_SIZE 20
 //----------------------------------------------------------------------
 // UpdatePC : Increments the Program Counter register in order to resume
 // the user program immediately after the "syscall" instruction.
@@ -39,6 +41,8 @@ UpdatePC ()
     pc += 4;
     machine->WriteRegister (NextPCReg, pc);
 }
+
+static int counter = 1000;
 
 void 
 copyStringFromMachine(int from,char* to, unsigned int size)
@@ -216,6 +220,19 @@ ExceptionHandler (ExceptionType which)
 
           break;
         }
+
+        case SC_UserThreadCreate:{
+          int f = (int )machine-> ReadRegister(4);
+          int arg= macine->ReadRegister(5);
+          do_UserThreadCreate(f, arg)
+          
+          break;
+        }
+        case SC_UserThreadExit:{
+          do_UserThreadExit();
+          break;
+        }
+
         default: {
           printf("Unexpected user mode exception %d %d\n", which, type);
           ASSERT(FALSE);
