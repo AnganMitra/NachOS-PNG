@@ -118,7 +118,7 @@ ExceptionHandler (ExceptionType which)
 { 
 
     int type = machine->ReadRegister (2);
-    //fprintf(stderr, "\nSC: %d %d\n",which,type );
+    
     #ifndef CHANGED 
     if ((which == SyscallException) && (type == SC_Halt))
       {
@@ -133,7 +133,7 @@ ExceptionHandler (ExceptionType which)
       
   
     #else
-
+    //fprintf(stderr, "\nSC: %d %d\n",which,type );
     if (which == SyscallException ) {
       switch (type) {
         case SC_Halt: {
@@ -152,10 +152,10 @@ ExceptionHandler (ExceptionType which)
         case SC_GetChar:{
           DEBUG('a', "Getting of a character, initiated by user program.\n");
           char ch;  
-          int n = (int )machine->ReadRegister(4);
+          //int n = (int )machine->ReadRegister(4);
           ch=synchconsole->SynchGetChar();
-          machine->WriteMem((int)n, sizeof(char), ch);
-          
+          //machine->WriteMem((int)n, sizeof(char), ch);
+          machine->WriteRegister(2, (int )ch);
           break;
         }
         case SC_GetString:{

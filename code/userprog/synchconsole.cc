@@ -58,6 +58,7 @@ char SynchConsole::SynchGetChar()
 	ReadAccessP();
 	readAvail->P ();	// wait for character to arrive
 	ch = console->GetChar ();
+	//fprintf(stderr, "%c\n",ch );
 	ReadAccessV();
 	return ch;
 }

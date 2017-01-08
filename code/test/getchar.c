@@ -6,8 +6,8 @@ void print(char c){
 }
 int main(){
 	char ch;
-	GetChar(&ch);
-	print(ch);
+	ch=GetChar();
+	PutChar(ch);
 	Halt();
 
 }
