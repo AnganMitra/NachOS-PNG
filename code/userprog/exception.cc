@@ -137,8 +137,9 @@ ExceptionHandler (ExceptionType which)
     if (which == SyscallException ) {
       switch (type) {
         case SC_Halt: {
-          HaltBarrier->V();
-          DEBUG('a', "Shutdown, initiated by user program.\n");
+          HaltBarrier->P();
+
+          DEBUG('a', "Shutdown, initiated by user program...\n");
           interrupt->Halt();
           break;
         }
@@ -223,16 +224,21 @@ ExceptionHandler (ExceptionType which)
         }
 
         case SC_UserThreadCreate:{
+
           HaltBarrier->P();
+
+          //fprintf(stderr, "Thread Creation syscall\n");  
           int f = (int )machine-> ReadRegister(4);
-          int arg= machine->ReadRegister(5);
-          do_UserThreadCreate(f, arg);
-          
+          int arg= (int)machine->ReadRegister(5);
+          int tid = do_UserThreadCreate(f, arg);
+          machine->WriteRegister(2,tid);
+
           break;
         }
         case SC_UserThreadExit:{
-          do_UserThreadExit();
           HaltBarrier->V();
+          do_UserThreadExit();
+
           break;
         }
 

@@ -58,7 +58,6 @@ char SynchConsole::SynchGetChar()
 	ReadAccessP();
 	readAvail->P ();	// wait for character to arrive
 	ch = console->GetChar ();
-	//fprintf(stderr, "%c\n",ch );
 	ReadAccessV();
 	return ch;
 }
@@ -66,57 +65,55 @@ char SynchConsole::SynchGetChar()
 void SynchConsole::SynchPutString(const char s[])
 {
 // ...
-	WriteAccessP();
+
 	int i;
 	 for( i=0; s[i]!='\0';i++){
 	 	SynchPutChar(s[i]);	// wait for write to finish
 	 }
-	 //console->PutChar('\n');	
-	 //writeDone->P ();
-	 WriteAccessV();
+
 	 return;
 }
 void SynchConsole::SynchGetString(char *s, int n)
 {
 // ...
-	ReadAccessP();
+
 	int i;
 	char ch;
 	for (i=0; i< n-1;i++){
 		readAvail->P();
-		ch= console->GetChar();
+		ch= SynchGetChar();
 		if(ch==EOF||ch=='\n')
 			break;
 		s[i]=ch;
 	}
 	s[i]= '\0';
-	ReadAccessV();
+
 	return;
 }
 void SynchConsole::SynchPutInt( int n)
 {
-	WriteAccessP();
+
 	char* output = new char[MAX_STRING_SIZE];
 	snprintf(output,MAX_STRING_SIZE,"%d",n );
 	SynchPutString(output);
 	delete(output);
-	WriteAccessV();
+	
 	return;
 
 }
 
 void SynchConsole::SynchGetInt(int* n)   
 {
-	ReadAccessP();
+	
 	int temp;
 	char* input = new char[MAX_STRING_SIZE];
 	SynchGetString(input, MAX_STRING_SIZE);
 
 	sscanf(input,"%d",&temp);
 	machine->WriteMem((int)n, sizeof(int), temp);
-	//fprintf(stderr, "hi %d\n", *n);
+
 	delete(input);
-	ReadAccessV();
+	
 	return;
 }	
 #endif

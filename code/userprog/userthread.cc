@@ -8,9 +8,8 @@
 #include "noff.h"
 //#include "synch.h"
 //#include "synchconsole.h"
-
+	
 #define THREADNAME_SIZE 10
-
 static int counter = 100;
 typedef struct  function_and_argument
 {
@@ -18,24 +17,29 @@ typedef struct  function_and_argument
 	int argument_pointer;
 }function_and_argument;
 
+Thread* newThread;
+
+
 static void StartUserThread(int f){
 	// here goes the function definition for starting an user thread
 	// have the space for the stack and initialization of the register
 	// here we unserialize the function and start to run the thing
-	int function_address = (int)(((function_and_argument*)f)->function_name);
+	DEBUG('t', "Inside start user thread\n");
+	int function_address = (((function_and_argument*)f)->function_name);
 	int arg_list = ((function_and_argument*)f)->argument_pointer;
 
-    int i;
 
-    for (i = 0; i < NumTotalRegs; i++)
-	machine->WriteRegister (i, 0);
+    //fprintf(stderr, "SC %d %d\n", function_address,arg_list );
+    newThread->space->RestoreState();
+    newThread->space->InitRegisters();
 
+	machine->WriteRegister(4, arg_list);
 	machine->WriteRegister (PCReg,function_address);
 	machine->WriteRegister (NextPCReg, function_address + 4);
-	machine->WriteRegister(4, arg_list);
-	//int register_temp = machine->ReadRegister(StackReg);
-	machine->WriteRegister (StackReg, currentThread->space->numPages*PageSize - 16 - 3 * PageSize);
-	currentThread->space->RestoreState();
+	int temp_stack_addr = machine->ReadRegister(StackReg);
+
+	machine->WriteRegister (StackReg, temp_stack_addr- 2*PageSize);
+	
 	// call this function to run the system
 	machine->Run();
 
@@ -48,28 +52,32 @@ static void StartUserThread(int f){
 int do_UserThreadCreate(int f, int arg){
 	// here goes the function for creating an user thread
 	//HaltBarrier->P();
+	//DEBUG('t', "User Thread Creation Call %d %d\n", f, arg);
+	counter++;
 	char* threadname = new char[THREADNAME_SIZE];
 	snprintf(threadname,THREADNAME_SIZE,"%d",counter );
-	counter++;
-	Thread* newThread = new Thread(threadname);
+	//fprintf(stderr, "1SC %d %d\n", f,arg );
+	newThread = new Thread(threadname);
 	function_and_argument* arg_list = new function_and_argument;
 	arg_list->function_name= f;
 	arg_list->argument_pointer= arg;
 
 	newThread->Fork(StartUserThread, (int)arg_list);
 
-	delete(threadname);
+	//delete(threadname);
 
 	// to be asked to vincent 
-	return 1;
+	return counter;
 }
 
-int do_UserThreadExit(){
+void do_UserThreadExit(){
 	// here goes the code for user thread exit
 	// Implement Thread::Exit
-	//HaltBarrier->V();
-	currentThread->Finish();
-	// to be asked to vincent
-	return 1;
+
+	DEBUG('t', "Calling Exit\n");
+
+	threadToBeDestroyed = newThread;
+	currentThread->Yield();
+	
 
 }
