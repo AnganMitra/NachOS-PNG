@@ -26,7 +26,7 @@
 #include "syscall.h"
 #include "userthread.h"
 //#include "synchconsole.h"
-#define THREADNAME_SIZE 20
+
 //----------------------------------------------------------------------
 // UpdatePC : Increments the Program Counter register in order to resume
 // the user program immediately after the "syscall" instruction.
@@ -42,7 +42,7 @@ UpdatePC ()
     machine->WriteRegister (NextPCReg, pc);
 }
 
-static int counter = 1000;
+
 
 void 
 copyStringFromMachine(int from,char* to, unsigned int size)
@@ -223,8 +223,8 @@ ExceptionHandler (ExceptionType which)
 
         case SC_UserThreadCreate:{
           int f = (int )machine-> ReadRegister(4);
-          int arg= macine->ReadRegister(5);
-          do_UserThreadCreate(f, arg)
+          int arg= machine->ReadRegister(5);
+          do_UserThreadCreate(f, arg);
           
           break;
         }
