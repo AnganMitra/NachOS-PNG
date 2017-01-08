@@ -75,9 +75,9 @@ void do_UserThreadExit(){
 	// Implement Thread::Exit
 
 	DEBUG('t', "Calling Exit\n");
-
-	threadToBeDestroyed = newThread;
-	currentThread->Yield();
-	
+//
+//	threadToBeDestroyed = newThread;
+//	currentThread->Yield();
+	newThread->Finish();	
 
 }
