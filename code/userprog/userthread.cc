@@ -78,6 +78,6 @@ void do_UserThreadExit(){
 //
 //	threadToBeDestroyed = newThread;
 //	currentThread->Yield();
-	newThread->Finish();	
+	currentThread->Finish();	
 
 }
