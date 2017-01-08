@@ -11,7 +11,7 @@ void f(int arg){
 int main(){
 	// use semaphore to make it wait
 	to_finish = new Semaphore("to_finish", 1);
-	int x=1;
+	int x=0;
 	to_finish->P();
 	UserThreadCreate(f,x);
 	to_finish->P();

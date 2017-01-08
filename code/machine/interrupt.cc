@@ -242,7 +242,8 @@ Interrupt::Idle()
 //----------------------------------------------------------------------
 void
 Interrupt::Halt()
-{
+{   
+    //HaltBarrier->P();
     printf("Machine halting!\n\n");
     stats->Print();
     Cleanup();     // Never returns.

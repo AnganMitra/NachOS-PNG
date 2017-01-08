@@ -41,9 +41,9 @@ UpdatePC ()
     pc += 4;
     machine->WriteRegister (NextPCReg, pc);
 }
-
-
-
+#ifdef CHANGED
+  static Semaphore* HaltBarrier = new Semaphore("Halt HaltBarrier",1);
+#endif
 void 
 copyStringFromMachine(int from,char* to, unsigned int size)
 {
@@ -137,6 +137,7 @@ ExceptionHandler (ExceptionType which)
     if (which == SyscallException ) {
       switch (type) {
         case SC_Halt: {
+          HaltBarrier->V();
           DEBUG('a', "Shutdown, initiated by user program.\n");
           interrupt->Halt();
           break;
@@ -222,6 +223,7 @@ ExceptionHandler (ExceptionType which)
         }
 
         case SC_UserThreadCreate:{
+          HaltBarrier->P();
           int f = (int )machine-> ReadRegister(4);
           int arg= machine->ReadRegister(5);
           do_UserThreadCreate(f, arg);
@@ -230,6 +232,7 @@ ExceptionHandler (ExceptionType which)
         }
         case SC_UserThreadExit:{
           do_UserThreadExit();
+          HaltBarrier->V();
           break;
         }
 
