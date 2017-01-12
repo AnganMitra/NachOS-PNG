@@ -84,6 +84,7 @@ class Thread
 
   public:
     int state; // to cease call to yield after two calls  -- modification by A.Prime
+    int bitmapID;
       Thread (const char *debugName);	// initialize a Thread 
      ~Thread ();		// deallocate a Thread
     // NOTE -- thread being deleted
@@ -112,6 +113,11 @@ class Thread
     void Print ()
     {
 	printf ("%s, ", name);
+    }
+    int getThreadID(){
+        int tid;
+        sscanf(name,"%d",&tid);
+        return tid;
     }
 
   private:

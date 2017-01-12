@@ -3,13 +3,26 @@
 
 
 void f(void* arg){	 
-	int x= 99;
-	PutInt(x);
-	int* y = (int*)arg;
-	PutInt(*y);
-	/*char ch = 'b';
-	PutChar(ch);*/
+
+
+	//int* y = (int*)arg;
+	//PutInt(*y);
+	char ch = 'b';
+	PutChar(ch);
+
 	UserThreadExit();
+	//PutChar(ch);
+}
+void g(void* arg){	 
+
+
+	//int* y = (int*)arg;
+	//PutInt(*y);
+	char ch = 'd';
+	PutChar(ch);
+	Halt();
+
+	//PutChar(ch);
 }
 int main(){
 
@@ -17,10 +30,10 @@ int main(){
 	
 	//PutString("X\n");
 	int x=48;
-	UserThreadCreate(f,(void*)&x);
+	int y = UserThreadCreate(f,(void*)&x);
 	x+=1;
-	UserThreadCreate(f,(void*)&x);
-	PutString("\nangan prime\n");	
-
-	Halt();
+	UserThreadCreate(g,(void*)&x);
+	PutString("\namela\n");	
+	UserThreadJoin(y);
+	UserThreadExit();
 }

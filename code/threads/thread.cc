@@ -169,7 +169,7 @@ Thread::Finish ()
     // is ever lost 
     ASSERT (threadToBeDestroyed == NULL);
     // End of addition 
-
+    //this->space->stackBitMap->Clear(this->bitmapID);
     threadToBeDestroyed = currentThread;
     Sleep ();			// invokes SWITCH
     // not reached

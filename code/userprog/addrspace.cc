@@ -19,7 +19,8 @@
 #include "system.h"
 #include "addrspace.h"
 #include "noff.h"
-
+#include "bitmap.h"
+#define STACK_SLOTS 6
 #include <strings.h>		/* for bzero */
 
 //----------------------------------------------------------------------
@@ -119,6 +120,10 @@ AddrSpace::AddrSpace (OpenFile * executable)
 			       [noffH.initData.virtualAddr]),
 			      noffH.initData.size, noffH.initData.inFileAddr);
       }
+      #ifdef CHANGED
+      stackBitMap = new BitMap(STACK_SLOTS);
+      #endif
+
 
 }
 
