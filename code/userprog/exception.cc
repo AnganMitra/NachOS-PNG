@@ -27,7 +27,6 @@
 #include "userthread.h"
 //#include "synchconsole.h"
 
-//static int counter=0;
 
 //----------------------------------------------------------------------
 // UpdatePC : Increments the Program Counter register in order to resume
@@ -45,7 +44,9 @@ UpdatePC ()
 }
 
 #ifdef CHANGED
-  static Semaphore* HaltBarrier = new Semaphore("Halt HaltBarrier",1);
+ // static Semaphore* HaltBarrier = new Semaphore("HaltBarrier",1);
+  static int counter=1;
+  static Semaphore* counter_lock = new Semaphore("Counter Lock ",1);
 #endif
 
 void 
@@ -141,7 +142,13 @@ ExceptionHandler (ExceptionType which)
     if (which == SyscallException ) {
       switch (type) {
         case SC_Halt: {
-          HaltBarrier->P();
+          //HaltBarrier->P();
+          //counter_lock->P();
+          while( counter!=1 ){
+              //fprintf(stderr, "%d\n", counter);
+              currentThread->Yield();
+          }
+          //counter_lock->V();
           DEBUG('a', "Shutdown, initiated by user program...\n");
           interrupt->Halt();
           break;
@@ -227,8 +234,10 @@ ExceptionHandler (ExceptionType which)
         }
 
         case SC_UserThreadCreate:{
-          HaltBarrier->P();
-          
+          //HaltBarrier->P();
+          counter_lock->P();
+          counter++;
+          counter_lock->V();
           int f = (int )machine-> ReadRegister(4);
           int arg= (int)machine->ReadRegister(5);
           int tid = do_UserThreadCreate(f, arg);
@@ -237,10 +246,13 @@ ExceptionHandler (ExceptionType which)
           break;
         }
         case SC_UserThreadExit:{
-          HaltBarrier->V();
+          //HaltBarrier->V();
 
+          
+          counter_lock->P();
+          counter--;
+          counter_lock->V();
           do_UserThreadExit();
-         
 
           break;
         }

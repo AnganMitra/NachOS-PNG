@@ -8,7 +8,7 @@
 #include "noff.h"
 #include <iostream>
 #include <set>
-//#include "synch.h"
+#include "synch.h"
 //#include "synchconsole.h"
 
 
@@ -20,6 +20,7 @@ Thread* list_of_threads [MAX_RUNNABLE_THREADS]={NULL};
 static int counter = 0;
 static std::set<int> WorkingSet;
 static std::set<int> FinishedSet;
+static Semaphore* mutex_lock= new Semaphore("mutex lock", 1);
 typedef struct  function_and_argument
 {
 	int function_name;
@@ -89,8 +90,9 @@ int do_UserThreadCreate(int f, int arg){
 	function_and_argument* arg_list = new function_and_argument;
 	arg_list->function_name= f;
 	arg_list->argument_pointer= arg;
-
+	mutex_lock->P();
 	WorkingSet.insert(counter);
+	mutex_lock->V();
 	newThread->Fork(StartUserThread, (int)arg_list);
 
 	return counter;
@@ -110,8 +112,10 @@ void do_UserThreadExit(){
 
 	DEBUG('t', "Calling Exit\n");
 	int tid = currentThread->getThreadID();
+	mutex_lock->P();
 	WorkingSet.erase(tid);
 	FinishedSet.insert(tid);
+	mutex_lock->V();
 	currentThread->Finish();	
 
 }

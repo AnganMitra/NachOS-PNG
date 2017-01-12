@@ -33,7 +33,8 @@ int main(){
 	int y = UserThreadCreate(f,(void*)&x);
 	x+=1;
 	UserThreadCreate(g,(void*)&x);
-	PutString("\namela\n");	
+	PutString("\nL\n");	
 	UserThreadJoin(y);
 	UserThreadExit();
+	return 1;
 }
