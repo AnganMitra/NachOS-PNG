@@ -12,9 +12,6 @@
 //#include "synchconsole.h"
 
 
-	
-#define MAX_RUNNABLE_THREADS 99
-Thread* list_of_threads [MAX_RUNNABLE_THREADS]={NULL};
 
 #define THREADNAME_SIZE 10
 static int counter = 0;
@@ -55,8 +52,8 @@ static void StartUserThread(int f){
 	int function_address = (((function_and_argument*)f)->function_name);
 	int arg_list = ((function_and_argument*)f)->argument_pointer;
 
-	int tid;
-	tid=  currentThread->getThreadID();
+	//int tid;
+	//tid=  currentThread->getThreadID();
     //fprintf(stderr, "SC %d %d\n", function_address,arg_list );
     //fprintf(stderr, "Thread Execution  %d\n",tid );
     currentThread->space->RestoreState();
@@ -67,10 +64,14 @@ static void StartUserThread(int f){
 	machine->WriteRegister (NextPCReg, function_address + 4);
 	//int temp_stack_addr = currentThread->space->numPages ;
 	//temp_stack_addr = machine->ReadRegister(StackReg);
-	int temp = currentThread->space->stackBitMap->Find();
+	int temp;
+	mutex_lock->V();
+	while((temp = currentThread->space->stackBitMap->Find())==-1);
 	currentThread->bitmapID= temp;
-	//machine->WriteRegister (StackReg, currentThread->space->numPages*PageSize -16 - temp * PageSize);
-	machine->WriteRegister (StackReg, currentThread->space->numPages*PageSize -16 - 3 * tid * PageSize);
+	mutex_lock->P();
+	fprintf(stderr, "%d\n", temp);
+	machine->WriteRegister (StackReg, currentThread->space->numPages*PageSize -16 - temp * PageSize);
+	//machine->WriteRegister (StackReg, currentThread->space->numPages*PageSize -16 - 3 * tid * PageSize);
 	
 	// call this function to run the system
 	machine->Run();
@@ -109,7 +110,7 @@ void do_UserThreadJoin(int tid){
 void do_UserThreadExit(){
 	// here goes the code for user thread exit
 	// Implement Thread::Exit
-
+	currentThread->space->stackBitMap->Clear(currentThread->bitmapID);
 	DEBUG('t', "Calling Exit\n");
 	int tid = currentThread->getThreadID();
 	mutex_lock->P();

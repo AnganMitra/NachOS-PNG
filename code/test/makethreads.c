@@ -29,10 +29,11 @@ int main(){
 	
 	
 	//PutString("X\n");
-	int x=48;
-	int y = UserThreadCreate(f,(void*)&x);
+	int x=0;
+	int y = UserThreadCreate(g,(void*)&x);
 	x+=1;
-	UserThreadCreate(g,(void*)&x);
+	for(;x<10;x++)
+		UserThreadCreate(f,(void*)&x);
 	PutString("\nL\n");	
 	UserThreadJoin(y);
 	UserThreadExit();
