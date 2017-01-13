@@ -46,6 +46,28 @@ SwapHeader (NoffHeader * noffH)
     noffH->uninitData.inFileAddr = WordToHost (noffH->uninitData.inFileAddr);
 }
 
+#ifdef CHANGED
+
+static void ReadAtVirtual(OpenFile* executable, int virtualaddr, int numBytes, int position, TranslationEntry* pageTable, unsigned int numPages)
+{
+    char* noffHeaderBuffer = new char[numBytes];
+    int bytesRead= executable->ReadAt ((char *) noffHeaderBuffer, numBytes, position);
+    TranslationEntry* temp_pageTable = machine->pageTable;
+    unsigned int temp_pageTableSize = machine->pageTableSize;
+    
+    machine->pageTable = pageTable;
+    machine->pageTableSize = numPages;
+    int i;
+    for(i=0;i<bytesRead;i++){
+      machine->WriteMem(virtualaddr+i, sizeof(char), noffHeaderBuffer[i]);
+    }
+    machine->pageTable = temp_pageTable;
+    machine->pageTableSize= temp_pageTableSize;
+
+
+}
+#endif
+
 //----------------------------------------------------------------------
 // AddrSpace::AddrSpace
 //      Create an address space to run a user program.
@@ -108,17 +130,26 @@ AddrSpace::AddrSpace (OpenFile * executable)
       {
 	  DEBUG ('a', "Initializing code segment, at 0x%x, size %d\n",
 		 noffH.code.virtualAddr, noffH.code.size);
+    #ifndef CHANGED
 	  executable->ReadAt (&(machine->mainMemory[noffH.code.virtualAddr]),
 			      noffH.code.size, noffH.code.inFileAddr);
+    #else
+      ReadAtVirtual( executable, noffH.code.virtualAddr, noffH.code.size, noffH.code.inFileAddr, pageTable, numPages);
+    #endif
       }
     if (noffH.initData.size > 0)
       {
 	  DEBUG ('a', "Initializing data segment, at 0x%x, size %d\n",
 		 noffH.initData.virtualAddr, noffH.initData.size);
+    #ifndef CHANGED
 	  executable->ReadAt (&
 			      (machine->mainMemory
 			       [noffH.initData.virtualAddr]),
 			      noffH.initData.size, noffH.initData.inFileAddr);
+      
+      #else
+      ReadAtVirtual( executable, noffH.initData.virtualAddr, noffH.initData.size, noffH.initData.inFileAddr, pageTable, numPages);
+      #endif
       }
       #ifdef CHANGED
       stackBitMap = new BitMap(STACK_SLOTS);
@@ -184,6 +215,9 @@ AddrSpace::InitRegisters ()
 void
 AddrSpace::SaveState ()
 {
+    machine->pageTable=pageTable;
+    machine->pageTableSize=numPages;
+
 }
 
 //----------------------------------------------------------------------
