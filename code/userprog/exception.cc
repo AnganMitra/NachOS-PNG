@@ -138,7 +138,7 @@ ExceptionHandler (ExceptionType which)
       
   
     #else
-    fprintf(stderr, "\nSC: %d %d\n",which,type );
+    //fprintf(stderr, "\nSC: %d %d\n",which,type );
     if (which == SyscallException ) {
       switch (type) {
         case SC_Halt: {

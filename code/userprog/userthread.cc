@@ -69,7 +69,7 @@ static void StartUserThread(int f){
 	while((temp = currentThread->space->stackBitMap->Find())==-1);
 	currentThread->bitmapID= temp;
 	mutex_lock->P();
-	fprintf(stderr, "%d\n", temp);
+	//fprintf(stderr, "%d\n", temp);
 	machine->WriteRegister (StackReg, currentThread->space->numPages*PageSize -16 - temp * PageSize);
 	//machine->WriteRegister (StackReg, currentThread->space->numPages*PageSize -16 - 3 * tid * PageSize);
 	
@@ -100,9 +100,10 @@ int do_UserThreadCreate(int f, int arg){
 }
 
 void do_UserThreadJoin(int tid){
+	ASSERT(( WorkingSet.find(tid) != WorkingSet.end()) ||( FinishedSet.find(tid) != FinishedSet.end() ));
 	while(1){
-		if (( WorkingSet.find(tid) != WorkingSet.end()) ||( FinishedSet.find(tid) != FinishedSet.end() ) )
-			return;
+		if ( FinishedSet.find(tid)!=FinishedSet.end())
+			return ;
 		else currentThread->Yield();
 	}
 }

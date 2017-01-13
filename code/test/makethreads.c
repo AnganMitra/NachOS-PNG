@@ -20,8 +20,8 @@ void g(void* arg){
 	//PutInt(*y);
 	char ch = 'd';
 	PutChar(ch);
-	Halt();
-
+	//Halt();
+	UserThreadExit();
 	//PutChar(ch);
 }
 int main(){
@@ -32,10 +32,12 @@ int main(){
 	int x=0;
 	int y = UserThreadCreate(g,(void*)&x);
 	x+=1;
-	for(;x<10;x++)
-		UserThreadCreate(f,(void*)&x);
+	for(;x<10;x++){
+		y = UserThreadCreate(f,(void*)&x);
+		UserThreadJoin(y);
+	}
 	PutString("\nL\n");	
-	UserThreadJoin(y);
-	UserThreadExit();
+	
+	Halt();
 	return 1;
 }
