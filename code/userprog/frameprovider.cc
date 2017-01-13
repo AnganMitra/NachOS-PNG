@@ -1,33 +1,39 @@
 #ifdef CHANGED
-#include "frameprovider.h"
-FrameProvider::FrameProvider(int frameDivisions)
+#include "system.h"
+//#include "frameprovider.h"
+FrameProvider::FrameProvider(int frame_Divisions)
 {
-
+	frameDivisions=frame_Divisions;
+	frameBitMap = new BitMap(frameDivisions);
 }
 
 FrameProvider::~FrameProvider()
 {
-
+	delete frameBitMap;
 }
 
 int
 FrameProvider::GetEmptyFrame()
 {
 
-	return 1;
+	int freeSlot= frameBitMap->Find();
+	//int* startAddress = freeSlot*PageSize;
+	//bzero((void*)startAddress,PageSize);
+	return freeSlot;
+
 }
 
 void 
-FrameProvider::ReleaseFrame(int frameID)
+FrameProvider::ReleaseFrame(int frameAddress)
 {
-
+	int position = frameAddress / PageSize;
+	frameBitMap->Clear(position);
 }
 
 int
 FrameProvider::NumAvailFrame()
 {
-	
-	return 1;
+	return frameBitMap->NumClear();
 }
 
 #endif

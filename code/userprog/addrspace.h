@@ -17,6 +17,7 @@
 #include "filesys.h"
 #ifdef CHANGED
 #include "bitmap.h"
+#include "frameprovider.h"
 #endif
 
 #define UserStackSize		1024	// increase this as necessary!
@@ -37,6 +38,7 @@ class AddrSpace
     unsigned int numPages;  // Number of pages in the virtual 
     #ifdef CHANGED
       BitMap* stackBitMap;
+      FrameProvider* frameBitMap;
       #endif
   private:
       TranslationEntry * pageTable;	// Assume linear page table translation

@@ -54,7 +54,7 @@ static void ReadAtVirtual(OpenFile* executable, int virtualaddr, int numBytes, i
     int bytesRead= executable->ReadAt ((char *) noffHeaderBuffer, numBytes, position);
     TranslationEntry* temp_pageTable = machine->pageTable;
     unsigned int temp_pageTableSize = machine->pageTableSize;
-    
+
     machine->pageTable = pageTable;
     machine->pageTableSize = numPages;
     int i;
@@ -109,10 +109,18 @@ AddrSpace::AddrSpace (OpenFile * executable)
 	   numPages, size);
 // first, set up the translation 
     pageTable = new TranslationEntry[numPages];
+    #ifdef CHANGED
+    frameBitMap = new FrameProvider(numPages);
+    #endif
     for (i = 0; i < numPages; i++)
       {
 	  pageTable[i].virtualPage = i;	// for now, virtual page # = phys page #
+    #ifndef CHANGED
 	  pageTable[i].physicalPage = i;
+    #else
+    pageTable[i].physicalPage= frameBitMap->GetEmptyFrame();
+    bzero((void*) &machine->mainMemory[ pageTable[i].physicalPage*PageSize ] , PageSize);
+    #endif
 	  pageTable[i].valid = TRUE;
 	  pageTable[i].use = FALSE;
 	  pageTable[i].dirty = FALSE;
@@ -168,6 +176,8 @@ AddrSpace::~AddrSpace ()
   // LB: Missing [] for delete
   // delete pageTable;
   delete [] pageTable;
+  delete stackBitMap;
+  delete frameBitMap;
   // End of modification
 }
 

@@ -3,15 +3,15 @@
 class FrameProvider
 {
 	public:
-		FrameProvider(int frameDivisions);
+		FrameProvider(int frame_Divisions);
 		~FrameProvider();
 		int GetEmptyFrame();
-		void ReleaseFrame(int frameID);
+		void ReleaseFrame(int frameAddress);
 		int NumAvailFrame();
 
 	private:
 		BitMap* frameBitMap;
-		int frameSlots;
+		int frameDivisions;
 };
 
 #endif
