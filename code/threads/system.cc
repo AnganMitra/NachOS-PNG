@@ -31,6 +31,7 @@ SynchDisk *synchDisk;
 Machine *machine;		// user program memory and registers
 #ifdef CHANGED
 SynchConsole *synchconsole;
+FrameProvider *frameprovider;
 #endif
 #endif
 
@@ -168,6 +169,7 @@ Initialize (int argc, char **argv)
     machine = new Machine (debugUserProg);	// this must come first
     #ifdef CHANGED
     synchconsole = new SynchConsole(NULL,NULL);
+    frameprovider = new FrameProvider(NumPhysPages);
     #endif
 #endif
 

@@ -18,6 +18,8 @@
 #ifdef CHANGED
 #include "bitmap.h"
 #include "frameprovider.h"
+#include <set>
+
 #endif
 
 #define UserStackSize		1024	// increase this as necessary!
@@ -38,7 +40,8 @@ class AddrSpace
     unsigned int numPages;  // Number of pages in the virtual 
     #ifdef CHANGED
       BitMap* stackBitMap;
-      FrameProvider* frameBitMap;
+      std::set<int> WorkingSet;
+      std::set<int> FinishedSet;
       #endif
   private:
       TranslationEntry * pageTable;	// Assume linear page table translation

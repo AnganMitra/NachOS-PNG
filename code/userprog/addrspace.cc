@@ -20,7 +20,7 @@
 #include "addrspace.h"
 #include "noff.h"
 #include "bitmap.h"
-#define STACK_SLOTS 6
+#define STACK_SLOTS 8
 #include <strings.h>		/* for bzero */
 
 //----------------------------------------------------------------------
@@ -48,7 +48,7 @@ SwapHeader (NoffHeader * noffH)
 
 #ifdef CHANGED
 
-static void ReadAtVirtual(OpenFile* executable, int virtualaddr, int numBytes, int position, TranslationEntry* pageTable, unsigned int numPages)
+ void ReadAtVirtual(OpenFile* executable, int virtualaddr, int numBytes, int position, TranslationEntry* pageTable, unsigned int numPages)
 {
     char* noffHeaderBuffer = new char[numBytes];
     int bytesRead= executable->ReadAt ((char *) noffHeaderBuffer, numBytes, position);
@@ -63,8 +63,6 @@ static void ReadAtVirtual(OpenFile* executable, int virtualaddr, int numBytes, i
     }
     machine->pageTable = temp_pageTable;
     machine->pageTableSize= temp_pageTableSize;
-
-
 }
 #endif
 
@@ -105,22 +103,24 @@ AddrSpace::AddrSpace (OpenFile * executable)
     // at least until we have
     // virtual memory
 
-    DEBUG ('a', "Initializing address space, num pages %d, size %d\n",
+    DEBUG ('t', "Initializing address space, num pages %d, size %d\n",
 	   numPages, size);
+    #ifdef CHANGED
+      stackBitMap = new BitMap(STACK_SLOTS);
+    #endif
 // first, set up the translation 
     pageTable = new TranslationEntry[numPages];
-    #ifdef CHANGED
-    frameBitMap = new FrameProvider(numPages);
-    #endif
     for (i = 0; i < numPages; i++)
       {
 	  pageTable[i].virtualPage = i;	// for now, virtual page # = phys page #
     #ifndef CHANGED
 	  pageTable[i].physicalPage = i;
     #else
-    pageTable[i].physicalPage= frameBitMap->GetEmptyFrame();
+    pageTable[i].physicalPage= frameprovider->GetEmptyFrame();
+    DEBUG('t', "page %d\n", pageTable[i].physicalPage);
     bzero((void*) &machine->mainMemory[ pageTable[i].physicalPage*PageSize ] , PageSize);
     #endif
+
 	  pageTable[i].valid = TRUE;
 	  pageTable[i].use = FALSE;
 	  pageTable[i].dirty = FALSE;
@@ -131,7 +131,7 @@ AddrSpace::AddrSpace (OpenFile * executable)
 
 // zero out the entire address space, to zero the unitialized data segment 
 // and the stack segment
-    bzero (machine->mainMemory, size);
+    //bzero (machine->mainMemory, size);
 
 // then, copy in the code and data segments into memory
     if (noffH.code.size > 0)
@@ -145,6 +145,7 @@ AddrSpace::AddrSpace (OpenFile * executable)
       ReadAtVirtual( executable, noffH.code.virtualAddr, noffH.code.size, noffH.code.inFileAddr, pageTable, numPages);
     #endif
       }
+    //DEBUG('t', "Written to page table\n"); 
     if (noffH.initData.size > 0)
       {
 	  DEBUG ('a', "Initializing data segment, at 0x%x, size %d\n",
@@ -159,10 +160,8 @@ AddrSpace::AddrSpace (OpenFile * executable)
       ReadAtVirtual( executable, noffH.initData.virtualAddr, noffH.initData.size, noffH.initData.inFileAddr, pageTable, numPages);
       #endif
       }
-      #ifdef CHANGED
-      stackBitMap = new BitMap(STACK_SLOTS);
-      #endif
-
+      
+      DEBUG('t', "Address Space Computed\n");
 
 }
 
@@ -175,9 +174,14 @@ AddrSpace::~AddrSpace ()
 {
   // LB: Missing [] for delete
   // delete pageTable;
+  
+  #ifdef CHANGED
+  //delete this->stackBitMap;
+  unsigned int i;
+  for(i=0; i< numPages;i++)
+    frameprovider->ReleaseFrame(pageTable[i].physicalPage);
+  #endif
   delete [] pageTable;
-  delete stackBitMap;
-  delete frameBitMap;
   // End of modification
 }
 

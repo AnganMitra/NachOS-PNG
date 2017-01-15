@@ -119,7 +119,7 @@ class Thread
         sscanf(name,"%d",&tid);
         return tid;
     }
-
+    
   private:
     // some of the private data for this class is listed above
 

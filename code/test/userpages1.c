@@ -21,8 +21,6 @@ void f(void* s)
 int main()
 {
 	
-	//UserThreadCreate(f, (void*) THIS);
-	//UserThreadCreate(f, (void*) THAT);
-	PutInt(4);
-//	Halt();
+	UserThreadCreate(f, (void*) THIS);
+	UserThreadCreate(f, (void*) THAT);
 }

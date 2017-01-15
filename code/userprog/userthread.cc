@@ -77,6 +77,8 @@ static void StartUserThread(int f){
 	machine->Run();
 
 
+
+
 }
 
 int do_UserThreadCreate(int f, int arg){
@@ -92,7 +94,7 @@ int do_UserThreadCreate(int f, int arg){
 	arg_list->function_name= f;
 	arg_list->argument_pointer= arg;
 	mutex_lock->P();
-	WorkingSet.insert(counter);
+	currentThread->space->WorkingSet.insert(counter);
 	mutex_lock->V();
 	newThread->Fork(StartUserThread, (int)arg_list);
 
@@ -100,9 +102,9 @@ int do_UserThreadCreate(int f, int arg){
 }
 
 void do_UserThreadJoin(int tid){
-	ASSERT(( WorkingSet.find(tid) != WorkingSet.end()) ||( FinishedSet.find(tid) != FinishedSet.end() ));
+	ASSERT(( currentThread->space->WorkingSet.find(tid) != WorkingSet.end()) ||( currentThread->space->FinishedSet.find(tid) != FinishedSet.end() ));
 	while(1){
-		if ( FinishedSet.find(tid)!=FinishedSet.end())
+		if ( currentThread->space->FinishedSet.find(tid)!=currentThread->space->FinishedSet.end())
 			return ;
 		else currentThread->Yield();
 	}
@@ -115,9 +117,11 @@ void do_UserThreadExit(){
 	DEBUG('t', "Calling Exit\n");
 	int tid = currentThread->getThreadID();
 	mutex_lock->P();
-	WorkingSet.erase(tid);
-	FinishedSet.insert(tid);
+	currentThread->space->WorkingSet.erase(tid);
+	currentThread->space->FinishedSet.insert(tid);
+	currentThread->space->stackBitMap->Clear(currentThread->bitmapID);
 	mutex_lock->V();
 	currentThread->Finish();	
 
 }
+

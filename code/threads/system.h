@@ -16,7 +16,7 @@
 #include "stats.h"
 #include "timer.h"
 
-#define MAX_STRING_SIZE 5
+#define MAX_STRING_SIZE 100
 // Initialization and cleanup routines
 extern void Initialize (int argc, char **argv);	// Initialization,
 						// called before anything else
@@ -36,6 +36,7 @@ extern Machine *machine;	// user program memory and registers
 #ifdef CHANGED
 #include "synchconsole.h"
 extern SynchConsole *synchconsole;
+extern FrameProvider* frameprovider;
 #endif
 #endif
 

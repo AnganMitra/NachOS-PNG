@@ -25,6 +25,8 @@
 #include "system.h"
 #include "syscall.h"
 #include "userthread.h"
+#include "forkprocess.h"
+#include "machine.h"
 //#include "synchconsole.h"
 
 
@@ -49,28 +51,24 @@ UpdatePC ()
   static Semaphore* counter_lock = new Semaphore("Counter Lock ",1);
 #endif
 
-void 
-copyStringFromMachine(int from,char* to, unsigned int size)
-{
-  int i;
-  bool flag;
-  
-  for(i=0;i<(int)size-1;){
-    flag=machine->ReadMem(from+i, (int)sizeof(char),(int*)(to+(int)i) );
-    /*
-    if(flag!=true){
+
+char * copyStringFromMachine(int from, unsigned max_size) {
+  /* On copie octet par octet, de la mémoire user vers la mémoire noyau (buffer)
+   * en faisant attention à bien convertir explicitement en char
+   */
+  int byte;
+  unsigned int i;
+  char * buffer = new char[max_size];
+  for(i = 0; i < max_size-1; i++) {
+    machine->ReadMem(from+i,1, &byte);
+    if((char)byte=='\0')
       break;
-    }
-    */
-    ASSERT(flag==true);
-    i++;
-  }  
-  //char ch = '\0';
-  //flag=machine->WriteMem((int)to+(int)i, (int)sizeof(char), int(ch) );
-  ASSERT(flag==true);
-  return;
- 
+    buffer[i] = (char) byte;
+  }
+  buffer[i] = '\0';
+  return buffer;
 }
+
 /*
     bool ReadMem(int addr, int size, int* value);
     bool WriteMem(int addr, int size, int value);
@@ -138,18 +136,33 @@ ExceptionHandler (ExceptionType which)
       
   
     #else
-    //fprintf(stderr, "\nSC: %d %d\n",which,type );
+    DEBUG('t', "\nSC: %d %d\n",which,type );
     if (which == SyscallException ) {
       switch (type) {
         case SC_Halt: {
           //HaltBarrier->P();
-          //counter_lock->P();
+          
           while( counter!=1 ){
               //fprintf(stderr, "%d\n", counter);
               currentThread->Yield();
           }
-          //counter_lock->V();
+          
           DEBUG('a', "Shutdown, initiated by user program...\n");
+          interrupt->Halt();
+          break;
+        }
+        case SC_Exit:{
+        
+          for(;currentThread->space->WorkingSet.size()!=0;)
+            do_UserThreadJoin(*(currentThread->space->WorkingSet.begin()));
+          if( counter>1 ){
+              //fprintf(stderr, "%d\n", counter);
+              counter_lock->P();
+              counter--;
+              counter_lock->V();
+              do_UserThreadExit();
+          }
+          DEBUG('a', "Shutdown, initiated by user program without explicit instruction ...\n");
           interrupt->Halt();
           break;
         }
@@ -195,14 +208,15 @@ ExceptionHandler (ExceptionType which)
           }
           int max_length =i;
           unsigned int size= MAX_STRING_SIZE;
-          char* to = new char[size];   // to is the temporary string to copy
+          char* to; //= new char[size];   // to is the temporary string to copy
           for(i=0; ;)
           {
-            copyStringFromMachine(from+i, to, size);
+            to=copyStringFromMachine(from+i, size);
             synchconsole->SynchPutString(to);
-            
-            if(i< max_length )
-              i=i+MAX_STRING_SIZE-1;
+            i=i+size-1;
+            if(i< max_length ){              
+              size=max_length-i > MAX_STRING_SIZE ? MAX_STRING_SIZE : max_length-i;
+            }
             else
               break;
            // fprintf(stderr, "len:%d %d\n",i,max_length );
@@ -213,6 +227,7 @@ ExceptionHandler (ExceptionType which)
 
           delete(to);
           //fprintf(stderr, "ps ended\n" );
+          DEBUG('t', "PutString Completed");
           break;
         }
         case SC_GetInt:{
@@ -235,9 +250,7 @@ ExceptionHandler (ExceptionType which)
 
         case SC_UserThreadCreate:{
           //HaltBarrier->P();
-          counter_lock->P();
-          counter++;
-          counter_lock->V();
+          
           int f = (int )machine-> ReadRegister(4);
           int arg= (int)machine->ReadRegister(5);
           int tid = do_UserThreadCreate(f, arg);
@@ -247,12 +260,10 @@ ExceptionHandler (ExceptionType which)
         }
         case SC_UserThreadExit:{
           //HaltBarrier->V();
-
-          
-          counter_lock->P();
-          counter--;
-          counter_lock->V();
-          do_UserThreadExit();
+          if(counter==1 && currentThread->space->WorkingSet.size()==1)
+            interrupt->Halt();
+          else
+            do_UserThreadExit();
 
           break;
         }
@@ -264,7 +275,17 @@ ExceptionHandler (ExceptionType which)
 
           break;
         }
-
+        case SC_ForkExec:{
+          
+          int arg = (int) machine->ReadRegister(4);
+          char* filename = copyStringFromMachine(arg,MAX_STRING_SIZE);
+          int pid = do_ForkExec((char*)filename);
+          machine->WriteRegister(2,pid);
+          counter_lock->P();
+          counter++;
+          counter_lock->V();  
+          break;
+        }
         default: {
           printf("Unexpected user mode exception %d %d\n", which, type);
           ASSERT(FALSE);

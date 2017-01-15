@@ -36,7 +36,7 @@ int main(){
 		y = UserThreadCreate(f,(void*)&x);
 		UserThreadJoin(y);
 	}
-	PutString("\nL\n");	
+	PutInt(2);	
 	
 	Halt();
 	return 1;
