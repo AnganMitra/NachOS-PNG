@@ -113,10 +113,11 @@ void do_UserThreadJoin(int tid){
 void do_UserThreadExit(){
 	// here goes the code for user thread exit
 	// Implement Thread::Exit
-	currentThread->space->stackBitMap->Clear(currentThread->bitmapID);
+	
 	DEBUG('t', "Calling Exit\n");
 	int tid = currentThread->getThreadID();
 	mutex_lock->P();
+	currentThread->space->stackBitMap->Clear(currentThread->bitmapID);
 	currentThread->space->WorkingSet.erase(tid);
 	currentThread->space->FinishedSet.insert(tid);
 	currentThread->space->stackBitMap->Clear(currentThread->bitmapID);

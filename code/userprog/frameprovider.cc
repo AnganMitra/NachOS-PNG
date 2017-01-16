@@ -1,11 +1,12 @@
 #ifdef CHANGED
 #include "system.h"
-//#include "frameprovider.h"
+#include "synch.h"
+
 FrameProvider::FrameProvider(int frame_Divisions)
 {
 	frameDivisions=frame_Divisions;
 	frameBitMap = new BitMap(frameDivisions);
-	access = new Semaphore("FrameProvider Semaphore Access", 1);
+	//access = new Semaphore("FrameProvider Semaphore Access", 1);
 }
 
 FrameProvider::~FrameProvider()

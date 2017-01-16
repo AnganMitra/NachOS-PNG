@@ -1,6 +1,9 @@
 #ifdef CHANGED
 #include "bitmap.h"
 #include "synch.h"
+#include "copyright.h"
+
+
 class FrameProvider
 {
 	public:
@@ -10,16 +13,16 @@ class FrameProvider
 		void ReleaseFrame(int frameAddress);
 		int NumAvailFrame();
 		void AccessWait(){
-			access->P();
+			//this->access->P();
 		}
 		void AccessPost(){
-			access->V();
+			//this->access->V();
 		}
 
 	private:
 		BitMap* frameBitMap;
 		int frameDivisions;
-		Semaphore* access;
+		//Semaphore* access;
 		int GetEmptyFrame();
 };
 
