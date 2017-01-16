@@ -107,7 +107,9 @@ AddrSpace::AddrSpace (OpenFile * executable)
 	   numPages, size);
     #ifdef CHANGED
       stackBitMap = new BitMap(STACK_SLOTS);
+      int* physicalFrames = frameprovider->GetEmptyFrames(numPages);
     #endif
+
 // first, set up the translation 
     pageTable = new TranslationEntry[numPages];
     for (i = 0; i < numPages; i++)
@@ -116,7 +118,8 @@ AddrSpace::AddrSpace (OpenFile * executable)
     #ifndef CHANGED
 	  pageTable[i].physicalPage = i;
     #else
-    pageTable[i].physicalPage= frameprovider->GetEmptyFrame();
+    
+    pageTable[i].physicalPage= physicalFrames[i];
     DEBUG('t', "page %d\n", pageTable[i].physicalPage);
     bzero((void*) &machine->mainMemory[ pageTable[i].physicalPage*PageSize ] , PageSize);
     #endif

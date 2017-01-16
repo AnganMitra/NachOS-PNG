@@ -7,6 +7,6 @@ int main()
 	PutChar('a');
 	ForkExec("./userpages0");	
 	ForkExec("./userpages1");	
-	//ForkExec("./userpages0");	
+	ForkExec("./userpages0");	
 	Halt();
 }

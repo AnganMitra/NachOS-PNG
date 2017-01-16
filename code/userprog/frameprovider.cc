@@ -5,6 +5,7 @@ FrameProvider::FrameProvider(int frame_Divisions)
 {
 	frameDivisions=frame_Divisions;
 	frameBitMap = new BitMap(frameDivisions);
+	access = new Semaphore("FrameProvider Semaphore Access", 1);
 }
 
 FrameProvider::~FrameProvider()
@@ -14,7 +15,7 @@ FrameProvider::~FrameProvider()
 
 int
 FrameProvider::GetEmptyFrame()
-{
+{	
 
 	int freeSlot= frameBitMap->Find();
 	//int* startAddress = freeSlot*PageSize;
@@ -25,15 +26,45 @@ FrameProvider::GetEmptyFrame()
 
 void 
 FrameProvider::ReleaseFrame(int frameAddress)
-{
+{	
+	AccessWait();
 	int position = frameAddress / PageSize;
 	frameBitMap->Clear(position);
+	AccessPost();
 }
 
 int
 FrameProvider::NumAvailFrame()
 {
 	return frameBitMap->NumClear();
+}
+
+int* 
+FrameProvider:: GetEmptyFrames(int numberFrames){
+
+	int* physicalFrames = new int[numberFrames];
+	
+	int index=0;
+	int temp;
+	for (;;){
+		AccessWait();
+		temp=GetEmptyFrame();
+		if (temp!=-1){
+			physicalFrames[index]= temp;
+		}
+		else {
+			AccessPost();
+			continue;
+		}		
+		index++;
+		if(index==numberFrames){
+			break;
+		}
+
+	}
+	
+	return physicalFrames;
+		
 }
 
 #endif
