@@ -103,38 +103,95 @@ Semaphore::V ()
 // the test case in the network assignment won't work!
 Lock::Lock (const char *debugName)
 {
+    #ifdef CHANGED
+    name = debugName;
+    lockThreadHolder = NULL;
+    mutexLock = new Semaphore("mutexLock",1);
+    #endif
 }
 
 Lock::~Lock ()
 {
+    #ifdef CHANGED
+    delete mutexLock;
+    #endif
 }
 void
 Lock::Acquire ()
-{
+{   
+    #ifdef CHANGED
+    mutexLock->P();
+    lockThreadHolder= currentThread;
+    #endif
 }
 void
 Lock::Release ()
 {
+    #ifdef CHANGED
+    ASSERT(isHeldByCurrentThread ());
+    lockThreadHolder = NULL;
+    mutexLock->V();
+    #endif
+}
+
+bool 
+Lock::isHeldByCurrentThread ()
+{
+    #ifdef CHANGED
+    return (currentThread== lockThreadHolder);
+    #endif
+    return TRUE;
 }
 
 Condition::Condition (const char *debugName)
 {
+    #ifdef CHANGED
+    name= debugName;
+    threadsQueue = new List();
+    #endif
 }
 
 Condition::~Condition ()
 {
+    #ifdef CHANGED
+    delete threadsQueue;
+    #endif
 }
 void
 Condition::Wait (Lock * conditionLock)
 {
-    ASSERT (FALSE);
+
+    #ifdef CHANGED
+    ASSERT(conditionLock->isHeldByCurrentThread());
+    Semaphore* condSem= new Semaphore("condition lock", 0);
+    threadsQueue->Append((void*)condSem);
+    conditionLock->Release();
+    condSem->P();
+    conditionLock->Acquire();
+    delete condSem;
+    #endif
 }
 
 void
 Condition::Signal (Lock * conditionLock)
 {
+    #ifdef CHANGED
+    ASSERT(conditionLock->isHeldByCurrentThread());
+    if(!threadsQueue->IsEmpty()){
+        Semaphore* signalSem = (Semaphore*) threadsQueue->Remove();
+        signalSem->V();  
+    }
+    #endif
 }
 void
 Condition::Broadcast (Lock * conditionLock)
 {
+    #ifdef CHANGED
+    ASSERT(conditionLock->isHeldByCurrentThread());
+    Semaphore* broadcastSem;
+    while(!threadsQueue->IsEmpty()){
+        broadcastSem = (Semaphore*) threadsQueue->Remove();
+        broadcastSem->V();
+    }
+    #endif
 }
