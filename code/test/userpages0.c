@@ -25,4 +25,5 @@ int main()
 	//UserThreadCreate(f, (void*) THAT);
 	PutInt(4);
 //	Halt();
+	return 1;
 }
