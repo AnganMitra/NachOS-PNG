@@ -15,9 +15,6 @@
 
 #define THREADNAME_SIZE 10
 static int counter = 0;
-static std::set<int> WorkingSet;
-static std::set<int> FinishedSet;
-static Semaphore* mutex_lock= new Semaphore("mutex lock", 1);
 typedef struct  function_and_argument
 {
 	int function_name;
@@ -65,10 +62,10 @@ static void StartUserThread(int f){
 	//int temp_stack_addr = currentThread->space->numPages ;
 	//temp_stack_addr = machine->ReadRegister(StackReg);
 	int temp;
-	mutex_lock->V();
+	currentThread->space->lock->Acquire();
 	while((temp = currentThread->space->stackBitMap->Find())==-1);
 	currentThread->bitmapID= temp;
-	mutex_lock->P();
+	currentThread->space->lock->Release();
 	//fprintf(stderr, "%d\n", temp);
 	machine->WriteRegister (StackReg, currentThread->space->numPages*PageSize -16 - temp * PageSize);
 	//machine->WriteRegister (StackReg, currentThread->space->numPages*PageSize -16 - 3 * tid * PageSize);
@@ -93,21 +90,27 @@ int do_UserThreadCreate(int f, int arg){
 	function_and_argument* arg_list = new function_and_argument;
 	arg_list->function_name= f;
 	arg_list->argument_pointer= arg;
-	mutex_lock->P();
+	currentThread->space->lock->Acquire();
 	currentThread->space->WorkingSet.insert(counter);
-	mutex_lock->V();
+	currentThread->space->lock->Release();
 	newThread->Fork(StartUserThread, (int)arg_list);
 
 	return counter;
 }
 
 void do_UserThreadJoin(int tid){
-	ASSERT(( currentThread->space->WorkingSet.find(tid) != WorkingSet.end()) ||( currentThread->space->FinishedSet.find(tid) != FinishedSet.end() ));
+	ASSERT(( currentThread->space->WorkingSet.find(tid) != currentThread->space->WorkingSet.end()) ||( currentThread->space->FinishedSet.find(tid) != currentThread->space->FinishedSet.end() ));
+	currentThread->space->lock->Acquire();
 	while(1){
-		if ( currentThread->space->FinishedSet.find(tid)!=currentThread->space->FinishedSet.end())
-			return ;
-		else currentThread->Yield();
+		
+		if (!( currentThread->space->FinishedSet.find(tid)!=currentThread->space->FinishedSet.end()))
+			currentThread->space->alertthreads->Wait(currentThread->space->lock);
+		else 
+			break;
 	}
+
+	currentThread->space->lock->Release();
+
 }
 
 void do_UserThreadExit(){
@@ -116,12 +119,13 @@ void do_UserThreadExit(){
 	
 	DEBUG('t', "Calling Exit\n");
 	int tid = currentThread->getThreadID();
-	mutex_lock->P();
+	currentThread->space->lock->Acquire();
 	currentThread->space->stackBitMap->Clear(currentThread->bitmapID);
 	currentThread->space->WorkingSet.erase(tid);
 	currentThread->space->FinishedSet.insert(tid);
 	currentThread->space->stackBitMap->Clear(currentThread->bitmapID);
-	mutex_lock->V();
+	currentThread->space->alertthreads->Broadcast(currentThread->space->lock);
+	currentThread->space->lock->Release();
 	currentThread->Finish();	
 
 }

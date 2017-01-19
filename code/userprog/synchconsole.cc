@@ -65,29 +65,30 @@ char SynchConsole::SynchGetChar()
 void SynchConsole::SynchPutString(const char s[])
 {
 // ...
-
+	WriteAccessP();
 	int i;
 	 for( i=0; s[i]!='\0';i++){
-	 	SynchPutChar(s[i]);	// wait for write to finish
+	 	console->PutChar(s[i]);
+		writeDone->P();
 	 }
-
+	 WriteAccessV();
 	 return;
 }
-void SynchConsole::SynchGetString(char *s, int n)
+void SynchConsole::	SynchGetString(char *s, int n)
 {
 // ...
-
+	ReadAccessP();
 	int i;
 	char ch;
 	for (i=0; i< n-1;i++){
 		readAvail->P();
-		ch= SynchGetChar();
+		ch= console->GetChar ();
 		if(ch==EOF||ch=='\n')
 			break;
 		s[i]=ch;
 	}
 	s[i]= '\0';
-
+	ReadAccessV();
 	return;
 }
 void SynchConsole::SynchPutInt( int n)

@@ -164,7 +164,10 @@ AddrSpace::AddrSpace (OpenFile * executable)
       #endif
       }
       
-      DEBUG('t', "Address Space Computed\n");
+      #ifdef CHANGED
+      lock = new Lock("address space lock");
+      alertthreads = new Condition("Alert Threads");
+      #endif
 
 }
 

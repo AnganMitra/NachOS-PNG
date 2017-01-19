@@ -162,6 +162,7 @@ Condition::Wait (Lock * conditionLock)
 {
 
     #ifdef CHANGED
+
     ASSERT(conditionLock->isHeldByCurrentThread());
     Semaphore* condSem= new Semaphore("condition lock", 0);
     threadsQueue->Append((void*)condSem);
@@ -187,6 +188,7 @@ void
 Condition::Broadcast (Lock * conditionLock)
 {
     #ifdef CHANGED
+    
     ASSERT(conditionLock->isHeldByCurrentThread());
     Semaphore* broadcastSem;
     while(!threadsQueue->IsEmpty()){

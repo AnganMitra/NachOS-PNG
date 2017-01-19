@@ -18,9 +18,12 @@
 #ifdef CHANGED
 #include "bitmap.h"
 #include "frameprovider.h"
+#include "synch.h"
 #include <set>
-
+class Lock;
+class Condition;
 #endif
+
 
 #define UserStackSize		1024	// increase this as necessary!
 //static Semaphore* HaltBarrier = new Semaphore("Halt HaltBarrier",1);
@@ -42,6 +45,8 @@ class AddrSpace
       BitMap* stackBitMap;
       std::set<int> WorkingSet;
       std::set<int> FinishedSet;
+      Condition* alertthreads;
+      Lock* lock;
       #endif
   private:
       TranslationEntry * pageTable;	// Assume linear page table translation

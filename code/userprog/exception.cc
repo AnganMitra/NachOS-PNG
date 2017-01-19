@@ -73,6 +73,7 @@ char * copyStringFromMachine(int from, unsigned max_size) {
     bool ReadMem(int addr, int size, int* value);
     bool WriteMem(int addr, int size, int value);
 */
+/*
 void 
 copyStringToMachine(char* from, int to, unsigned int size)
 {
@@ -91,6 +92,19 @@ copyStringToMachine(char* from, int to, unsigned int size)
   ASSERT(flag==true);
   return;
  
+}*/
+
+
+void copyStringToMachine(char * string, int to, unsigned max_size) {
+  /* On copie octet par octet, en faisant attention à bien convertir
+   * explicitement en char
+   */
+  char * bytes = (char *)(&machine->mainMemory[to]);
+  for(unsigned int i = 0; i < max_size-1; i++) {
+    bytes[i] = string[i];
+    if(string[i]=='\0')
+      break;
+  }
 }
 
 //----------------------------------------------------------------------
@@ -140,12 +154,6 @@ ExceptionHandler (ExceptionType which)
     if (which == SyscallException ) {
       switch (type) {
         case SC_Halt: {
-          //HaltBarrier->P();
-          
-          while( counter!=1 ){
-              //fprintf(stderr, "%d\n", counter);
-              currentThread->Yield();
-          }
           
           DEBUG('a', "Shutdown, initiated by user program...\n");
           interrupt->Halt();
@@ -178,7 +186,7 @@ ExceptionHandler (ExceptionType which)
           char ch;  
           //int n = (int )machine->ReadRegister(4);
           ch=synchconsole->SynchGetChar();
-          //machine->WriteMem((int)n, sizeof(char), ch);
+          //fprintf(stderr, "%c\n", ch);
           machine->WriteRegister(2, (int )ch);
           break;
         }
@@ -189,8 +197,9 @@ ExceptionHandler (ExceptionType which)
           unsigned int size= machine->ReadRegister(5);
           char* temp= new char[size];
           synchconsole->SynchGetString(temp, size);
-          //fprintf(stderr, "%s\n", temp);
+          
           copyStringToMachine(temp, to, size);
+          //fprintf(stderr, "here\n");
           delete(temp);
           break;
         }
