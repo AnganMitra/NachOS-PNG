@@ -23,7 +23,6 @@ int main()
 		
 	ForkExec("./userpages1");	
 	ForkExec("./userpages1");
-	UserThreadCreate(f, (void*) THAT);	
-	return 1;	
+	UserThreadCreate(f, (void*) THAT);		
 	
 }
