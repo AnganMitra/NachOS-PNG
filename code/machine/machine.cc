@@ -70,7 +70,6 @@ Machine::Machine(bool debug)
     tlb = NULL;
     pageTable = NULL;
 #endif
-
     singleStep = debug;
     CheckEndian();
 }

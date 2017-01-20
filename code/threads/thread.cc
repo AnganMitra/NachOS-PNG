@@ -172,6 +172,10 @@ Thread::Finish ()
     // End of addition 
     //this->space->stackBitMap->Clear(this->bitmapID);
     threadToBeDestroyed = currentThread;
+    /*#ifdef CHANGED
+    if (machine->numberProcess==1)
+      interrupt->Halt();
+    #endif*/
     Sleep ();			// invokes SWITCH
     // not reached
 }
