@@ -9,9 +9,9 @@
 #include <iostream>
 #include <set>
 #include "synch.h"
-//#include "synchconsole.h"
 
 
+#define PAGESPERTHREAD 2
 
 #define THREADNAME_SIZE 10
 static int counter = 0;
@@ -22,27 +22,27 @@ typedef struct  function_and_argument
 }function_and_argument;
 
 
+void do_UserThreadExit(){
+	// here goes the code for user thread exit
+	// Implement Thread::Exit
+	
+	DEBUG('t', "Calling Exit\n");
+	int tid = currentThread->getThreadID();
+	currentThread->space->lock->Acquire();
+	currentThread->space->ClearStack(currentThread->bitmapID);
+	currentThread->space->WorkingSet.erase(tid);
+	currentThread->space->FinishedSet.insert(tid);
+	currentThread->space->alertthreads->Broadcast(currentThread->space->lock);
+	currentThread->space->lock->Release();
+	currentThread->Finish();	
+
+}
 	
 
 static void StartUserThread(int f){
 	// here goes the function definition for starting an user thread
 	// have the space for the stack and initialization of the register
 	// here we unserialize the function and start to run the thing
-/*	std::set<int> myset;
-  std::set<int>::iterator it;
-
-  // set some initial values:
-  for (int i=1; i<=5; i++) myset.insert(i*10);    // set: 10 20 30 40 50
-
-  it=myset.find(20);
-  myset.erase (it);
-  myset.erase (myset.find(40));
-  	std::cout << "myset contains:";
-  for (it=myset.begin(); it!=myset.end(); ++it)
-    fprintf(stderr, "%d\n", *it);
-
-*/
-
 
 
 	DEBUG('t', "Inside start user thread\n");
@@ -53,21 +53,26 @@ static void StartUserThread(int f){
 	//tid=  currentThread->getThreadID();
     //fprintf(stderr, "SC %d %d\n", function_address,arg_list );
     //fprintf(stderr, "Thread Execution  %d\n",tid );
-    currentThread->space->RestoreState();
-    currentThread->space->InitRegisters();
+    //currentThread->space->RestoreState();
+    //currentThread->space->InitRegisters();
 
 	machine->WriteRegister(4, arg_list);
 	machine->WriteRegister (PCReg,function_address);
 	machine->WriteRegister (NextPCReg, function_address + 4);
 	//int temp_stack_addr = currentThread->space->numPages ;
 	//temp_stack_addr = machine->ReadRegister(StackReg);
-	int temp;
-	currentThread->space->lock->Acquire();
-	while((temp = currentThread->space->stackBitMap->Find())==-1);
-	currentThread->bitmapID= temp;
-	currentThread->space->lock->Release();
+	int pos;
+	
+	pos = currentThread->space->GetStack();
+	if (pos == -1)
+	{
+		fprintf(stderr, "Insufficient Space for New Thread Creation \n" );
+		do_UserThreadExit();
+	}
+	currentThread->bitmapID= pos;
+	
 	//fprintf(stderr, "%d\n", temp);
-	machine->WriteRegister (StackReg, currentThread->space->numPages*PageSize -16 - temp * PageSize);
+	machine->WriteRegister (StackReg,  PAGESPERTHREAD *(pos+1) * PageSize);
 	//machine->WriteRegister (StackReg, currentThread->space->numPages*PageSize -16 - 3 * tid * PageSize);
 	
 	// call this function to run the system
@@ -113,20 +118,5 @@ void do_UserThreadJoin(int tid){
 
 }
 
-void do_UserThreadExit(){
-	// here goes the code for user thread exit
-	// Implement Thread::Exit
-	
-	DEBUG('t', "Calling Exit\n");
-	int tid = currentThread->getThreadID();
-	currentThread->space->lock->Acquire();
-	currentThread->space->stackBitMap->Clear(currentThread->bitmapID);
-	currentThread->space->WorkingSet.erase(tid);
-	currentThread->space->FinishedSet.insert(tid);
-	currentThread->space->stackBitMap->Clear(currentThread->bitmapID);
-	currentThread->space->alertthreads->Broadcast(currentThread->space->lock);
-	currentThread->space->lock->Release();
-	currentThread->Finish();	
 
-}
 

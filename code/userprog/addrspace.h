@@ -22,6 +22,7 @@
 #include <set>
 class Lock;
 class Condition;
+class Semaphore;
 #endif
 
 
@@ -47,6 +48,9 @@ class AddrSpace
       std::set<int> FinishedSet;
       Condition* alertthreads;
       Lock* lock;
+      Semaphore* mutexlock;
+      int GetStack();
+      void ClearStack(int pos);
       #endif
   private:
       TranslationEntry * pageTable;	// Assume linear page table translation

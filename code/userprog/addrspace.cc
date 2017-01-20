@@ -20,7 +20,7 @@
 #include "addrspace.h"
 #include "noff.h"
 #include "bitmap.h"
-#define STACK_SLOTS 8
+#define PAGESPERTHREAD 2
 #include <strings.h>		/* for bzero */
 
 //----------------------------------------------------------------------
@@ -106,8 +106,9 @@ AddrSpace::AddrSpace (OpenFile * executable)
     DEBUG ('t', "Initializing address space, num pages %d, size %d\n",
 	   numPages, size);
     #ifdef CHANGED
-      stackBitMap = new BitMap(STACK_SLOTS);
+      stackBitMap = new BitMap(size/PAGESPERTHREAD);
       int* physicalFrames = frameprovider->GetEmptyFrames(numPages);
+      mutexlock = new Semaphore("Address Space Semaphore", 1);
     #endif
 
 // first, set up the translation 
@@ -167,6 +168,9 @@ AddrSpace::AddrSpace (OpenFile * executable)
       #ifdef CHANGED
       lock = new Lock("address space lock");
       alertthreads = new Condition("Alert Threads");
+      unsigned int preallocated = divRoundUp(divRoundUp( noffH.initData.virtualAddr +  noffH.initData.size , PageSize), PAGESPERTHREAD);
+      for(i = 0;i<preallocated;i++)
+        stackBitMap->Mark(i);
       #endif
 
 }
@@ -235,8 +239,10 @@ AddrSpace::InitRegisters ()
 void
 AddrSpace::SaveState ()
 {
-    machine->pageTable=pageTable;
-    machine->pageTableSize=numPages;
+  #ifdef CHANGED
+    pageTable=machine->pageTable;
+    numPages= machine->pageTableSize;
+  #endif
 
 }
 
@@ -254,3 +260,22 @@ AddrSpace::RestoreState ()
     machine->pageTable = pageTable;
     machine->pageTableSize = numPages;
 }
+
+#ifdef CHANGED
+int 
+AddrSpace::GetStack()
+{
+    mutexlock->P();
+    int pos = stackBitMap->Find();
+    mutexlock->V();
+    return pos;
+}
+void 
+AddrSpace::ClearStack(int pos)
+{
+    mutexlock->P();
+    stackBitMap->Clear(pos);
+    mutexlock->V();
+
+}
+#endif
