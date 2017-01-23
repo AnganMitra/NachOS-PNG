@@ -41,8 +41,40 @@ Directory::Directory(int size)
     tableSize = size;
     for (int i = 0; i < tableSize; i++)
 	table[i].inUse = FALSE;
-}
 
+    #ifdef CHANGED
+    AddParentDirectory(1);
+    AddCurrentDirectory(1);
+    #endif
+}
+#ifdef CHANGED
+void 
+Directory::AddParentDirectory(int sector)
+{
+    table[1].sector = sector;
+    table[1].inUse = TRUE;
+    strcpy(table[1].name, "..");
+    table[1].isDir = TRUE;
+
+}
+void 
+Directory::AddCurrentDirectory(int sector)
+{
+    table[0].sector = sector;
+    table[0].inUse = TRUE;
+    strcpy(table[0].name, ".");
+    table[0].isDir = TRUE;
+}
+bool 
+Directory::isDirectoryEmpty()
+{
+    int i;
+    for (i=2;i<tableSize;i++)
+        if(table[i].inUse)
+            return FALSE;
+    return TRUE;
+}
+#endif
 //----------------------------------------------------------------------
 // Directory::~Directory
 // 	De-allocate directory data structure.
@@ -171,7 +203,11 @@ Directory::List()
 {
    for (int i = 0; i < tableSize; i++)
 	if (table[i].inUse)
-	    printf("%s\n", table[i].name);
+	   #ifndef CHANGED
+        printf("%s\n", table[i].name);
+    #else
+        printf("%c :%s\n", table[i].isDir?'D':'F', table[i].name);
+    #endif
 }
 
 //----------------------------------------------------------------------

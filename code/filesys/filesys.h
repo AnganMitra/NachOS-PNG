@@ -65,6 +65,9 @@ class FileSystem {
 };
 
 #else // FILESYS
+#ifdef CHANGED
+#include "directory.h"
+#endif
 class FileSystem {
   public:
     FileSystem(bool format);		// Initialize the file system.
@@ -85,6 +88,17 @@ class FileSystem {
 
     void Print();			// List all the files and their contents
 
+    #ifdef CHANGED
+    Directory* GetRootDirectory()
+    {
+      Directory *directory = new Directory(10);
+      directory->FetchFrom(directoryFile);
+      return directory;
+    }
+    Directory* FindDirectory(Directory* root, char* path);
+    bool CreateDirectory(Directory* root, char* path);
+    bool RemoveDirectory(Directory* root, char* path);
+    #endif
   private:
    OpenFile* freeMapFile;		// Bit map of free disk blocks,
 					// represented as a file

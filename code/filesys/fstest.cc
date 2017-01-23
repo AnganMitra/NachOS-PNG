@@ -183,3 +183,135 @@ PerformanceTest()
     stats->Print();
 }
 
+#ifdef CHANGED
+void Terminal()
+{
+    
+    Directory* tempDirectory;
+    char* input = new char[MAX_STRING_SIZE];
+    char* path  = new char[MAX_STRING_SIZE];
+    strcpy(path, "/");
+    tempDirectory= fileSystem->GetRootDirectory();
+    synchconsole->SynchPutString("Terminal Initiated\n");
+    while(1)
+    {
+        fprintf(stderr, "PNG: $"    );
+        synchconsole->SynchGetString(input, MAX_STRING_SIZE);
+        if(!strncmp(input, "q", 1))
+            break;
+        
+        
+        if (!strncmp(input, "ls", 2))
+        {
+           
+             if (tempDirectory == NULL)
+             {
+                fprintf(stderr, "Directory %s not found\n",path );
+                fprintf(stderr, "Reinitialized to root \n");
+                tempDirectory= fileSystem->GetRootDirectory();
+                continue;
+             }
+
+             tempDirectory->List();
+             //delete tempPath;
+
+
+        }
+        else if (!strncmp(input, "mkdir", 5))
+        {
+            
+            path = input;
+            while(*path != ' '&&*path)
+                path++;
+            
+            if (path == '\0')
+             {
+                synchconsole->SynchPutString("unspecified path\n");
+                continue;
+             }
+             path ++;
+            if(*path=='/')
+             {
+                if(!fileSystem->CreateDirectory (fileSystem->GetRootDirectory(), path))
+                {
+                    fprintf(stderr, "Error in creating \n" );
+                }
+             }
+            else  if(!fileSystem->CreateDirectory (tempDirectory,path))
+                {
+                    fprintf(stderr, "Error in creating \n" );
+                }
+            
+            tempDirectory= fileSystem-> GetRootDirectory();
+            fprintf(stderr, "Path reinitialized to root directory /\n" );
+
+        }
+        else if (!strncmp(input, "rmdir", 5))
+        {
+            path = input;
+            while(*path != ' '&&*path)
+                path++;
+            
+            if (path == '\0')
+             {
+                synchconsole->SynchPutString("unspecified path\n");
+                continue;
+             }
+             path ++;
+             if(*path=='/')
+             {
+                if(!fileSystem->RemoveDirectory (fileSystem->GetRootDirectory(), path))
+                {
+                    fprintf(stderr, "Error in removing \n" );
+                }
+             }
+            else  if(!fileSystem->RemoveDirectory (tempDirectory,path))
+                {
+                    fprintf(stderr, "Error in removing \n" );
+                }
+            tempDirectory= fileSystem-> GetRootDirectory();
+            fprintf(stderr, "Path reinitialized to root directory /\n" );
+            
+        }
+        else if (!strncmp(input, "cd", 2))
+        {
+            path = input;
+            while(*path && *path!=' ')
+                path++;
+            if (*path == '\0')
+             {
+                synchconsole->SynchPutString("unspecified path\n");
+                continue;
+             }  
+             path++;
+
+
+            Directory* temp = tempDirectory;
+            if(*path=='/')
+             {
+                temp =  fileSystem->FindDirectory(fileSystem->GetRootDirectory(), path);
+             }
+            else 
+            {
+                temp =  fileSystem->FindDirectory(temp, path);
+            }
+            
+            if (temp==NULL)
+                fprintf(stderr, "Directory %s not found \n",path );
+            else 
+            {
+
+                tempDirectory = temp;
+                
+            }
+         
+
+        }
+
+
+
+
+    }
+}
+
+#endif

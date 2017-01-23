@@ -339,3 +339,119 @@ FileSystem::Print()
     delete freeMap;
     delete directory;
 } 
+
+
+#ifdef CHANGED
+Directory* 
+FileSystem::FindDirectory(Directory* root, char* path)
+{
+    Directory *directory=root;
+    OpenFile *file;
+    int sector;
+
+    
+    sector = directory->Find(path);
+    if (sector == -1 ) {
+        return NULL;            // file not found 
+    }
+    file = new OpenFile(sector);
+
+    directory = new Directory(NumDirEntries);
+    directory->FetchFrom(file);
+    delete file;
+    return directory;
+
+}
+bool
+FileSystem::CreateDirectory(Directory* root, char* path)
+{
+    BitMap *freeMap;
+    FileHeader *hdr;
+    int sector;
+    bool success;
+
+    DEBUG('f', "Creating directory %s", path);
+
+
+    if (root == NULL)
+        success = FALSE;
+    else
+    {
+        if (root->Find(path) != -1)
+            success = FALSE;            // file is already in directory
+        else {  
+            freeMap = new BitMap(NumSectors);
+            freeMap->FetchFrom(freeMapFile);
+            sector = freeMap->Find();   // find a sector to hold the file header
+            if (sector == -1)       
+                success = FALSE;        // no free block for file header 
+            else if (!root->AddDirectory(path, sector))
+                success = FALSE;    // no space in directory
+            else {
+                hdr = new FileHeader;
+                if (!hdr->Allocate(freeMap, DirectoryFileSize))
+                    success = FALSE;    // no space on disk for data
+                else {  
+                    success = TRUE;
+                    // everthing worked, flush all changes back to disk
+                    hdr->WriteBack(sector);         
+                    //fromDir->WriteBack(directoryFile);
+                    Directory *newDirectory = new Directory(NumDirEntries);
+                    newDirectory->AddCurrentDirectory(sector);
+                    newDirectory->AddParentDirectory(root->GetCurrentSector());
+                    OpenFile *file = new OpenFile(sector);
+                    newDirectory->WriteBack(file);
+                    delete file;
+                    delete newDirectory;
+
+                    root->Flush();
+                    freeMap->WriteBack(freeMapFile);
+                }
+                delete hdr;
+            }
+        }
+        delete freeMap;
+        delete root;
+    }
+
+    return success;
+}
+
+bool 
+FileSystem::RemoveDirectory(Directory* root, char* path)
+{
+    Directory *directory;
+    BitMap *freeMap;
+    OpenFile *file;
+    int sector;
+
+    
+    sector = root->Find(path);
+    if (sector == -1 ) {
+        return FALSE;            // file not found 
+    }
+    file = new OpenFile(sector);
+
+    directory = new Directory(NumDirEntries);
+    directory->FetchFrom(file);
+    delete file;
+
+    if (!directory->isDirectoryEmpty())
+    {
+        delete directory;
+        return FALSE;
+    }
+
+    freeMap = new BitMap(NumSectors);
+    freeMap->FetchFrom(freeMapFile);
+
+    freeMap->Clear(sector);         // remove header block
+    root->Remove(path);
+
+    freeMap->WriteBack(freeMapFile);        // flush to disk
+    root->Flush();
+    delete directory;
+    delete freeMap;
+    return TRUE;
+}
+#endif

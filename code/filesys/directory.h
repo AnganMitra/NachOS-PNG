@@ -36,6 +36,9 @@ class DirectoryEntry {
 					//   FileHeader for this file 
     char name[FileNameMaxLen + 1];	// Text name for file, with +1 for 
 					// the trailing '\0'
+    #ifdef CHANGED
+    bool isDir;
+    #endif
 };
 
 // The following class defines a UNIX-like "directory".  Each entry in
@@ -70,14 +73,45 @@ class Directory {
     void Print();			// Verbose print of the contents
 					//  of the directory -- all the file
 					//  names and their contents.
+    int FindIndex(const char *name);    // Find the index into the directory 
+                    //  table corresponding to "name"
+    #ifdef CHANGED
+    void AddParentDirectory(int sector);
+    void AddCurrentDirectory(int sector);
+    bool isDirectoryEmpty();
+    int GetCurrentSector()
+    {
+        return table[0].sector;
+    }
 
+    void Flush()
+    {
+        OpenFile* file = new OpenFile(table[0].sector);
+        WriteBack(file);
+    }
+    bool AddDirectory(char* name, int sector)
+    {
+
+    if (FindIndex(name) != -1)
+        return FALSE;
+
+    for (int i = 0; i < tableSize; i++)
+        if (!table[i].inUse) {
+            table[i].inUse = TRUE;
+            strncpy(table[i].name, name, FileNameMaxLen); 
+            table[i].sector = sector;
+            table[i].isDir = TRUE;
+            return TRUE;
+        }
+    return FALSE;  
+    }
+    #endif
   private:
     int tableSize;			// Number of directory entries
     DirectoryEntry *table;		// Table of pairs: 
 					// <file name, file header location> 
 
-    int FindIndex(const char *name);	// Find the index into the directory 
-					//  table corresponding to "name"
+    
 };
 
 #endif // DIRECTORY_H
