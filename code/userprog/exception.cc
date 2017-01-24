@@ -46,16 +46,13 @@ UpdatePC ()
 }
 
 #ifdef CHANGED
- // static Semaphore* HaltBarrier = new Semaphore("HaltBarrier",1);
   static int counter=1;
   static Semaphore* counter_lock = new Semaphore("Counter Lock ",1);
 #endif
 
 
 char * copyStringFromMachine(int from, unsigned max_size) {
-  /* On copie octet par octet, de la mémoire user vers la mémoire noyau (buffer)
-   * en faisant attention à bien convertir explicitement en char
-   */
+  
   int byte;
   unsigned int i;
   char * buffer = new char[max_size];
@@ -69,39 +66,15 @@ char * copyStringFromMachine(int from, unsigned max_size) {
   return buffer;
 }
 
-/*
-    bool ReadMem(int addr, int size, int* value);
-    bool WriteMem(int addr, int size, int value);
-*/
-/*
-void 
-copyStringToMachine(char* from, int to, unsigned int size)
-{
-  unsigned int i;
-  bool flag;
-  char ch;
-  for(i=0;i<size;i++){
-    ch = from [i];
-    if(ch == EOF )
-      break;
-    flag=machine->WriteMem(to+i, sizeof(char),ch );
-    ASSERT(flag==true);
-  }
-  
-  machine->WriteMem((int)to+i, sizeof(char), EOF );
-  ASSERT(flag==true);
-  return;
- 
-}*/
 
 
 void copyStringToMachine(char * string, int to, unsigned max_size) {
-  /* On copie octet par octet, en faisant attention à bien convertir
-   * explicitement en char
-   */
-  char * bytes = (char *)(&machine->mainMemory[to]);
-  for(unsigned int i = 0; i < max_size-1; i++) {
-    bytes[i] = string[i];
+  
+  
+  char * buffer = (char *)(&machine->mainMemory[to]);
+  unsigned int i;
+  for(i = 0; i < max_size-1; i++) {
+    buffer[i] = string[i];
     if(string[i]=='\0')
       break;
   }

@@ -63,6 +63,8 @@ extern void MailTest (int networkID);
 
 #ifdef CHANGED
 extern void Terminal();
+extern void RingTest(int addr);
+extern void ReliableTransferTest(int farAddr);
 #endif
 //----------------------------------------------------------------------
 // main
@@ -182,6 +184,27 @@ main (int argc, char **argv)
 		MailTest (atoi (*(argv + 1)));
 		argCount = 2;
 	    }
+
+	   #ifdef CHANGED
+	    else if (!strcmp (*argv, "-ring"))
+	    {
+		ASSERT (argc > 1);
+		Delay (7);	// delay for 2 seconds
+		// to give the user time to 
+		// start up another nachos
+		RingTest (atoi (*(argv + 1)));
+		argCount = 2;
+	    }
+	    else if (!strcmp (*argv, "-rtt"))
+	    {
+		ASSERT (argc > 1);
+		Delay (7);	// delay for 2 seconds
+		// to give the user time to 
+		// start up another nachos
+		ReliableTransferTest (atoi (*(argv + 1)));
+		argCount = 2;
+	    }
+	   #endif
 #endif // NETWORK
       }
       interrupt->Halt();
