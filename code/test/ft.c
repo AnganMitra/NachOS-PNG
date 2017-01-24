@@ -16,7 +16,7 @@ void g(void* arg){
 int main()
 {
 	char* filename= "ft";
-
+	Create("FCreated");
 	int fid1 = Open(filename);
 	if(fid1==0)
 		PutString("hey, I am blocked from main\n");

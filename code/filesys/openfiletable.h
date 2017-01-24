@@ -57,7 +57,7 @@ public:
     	
     	for(i=0;i<entries; i++)
     	{	
-    	if (!(strcmp(name, FilePosession[i].name))  )
+    	if (!(strcmp(name, FilePosession[i].name)) && FilePosession[i].tid == tid  )
     		{
     			if(FilePosession[i].inUse == TRUE)
     				return 1;

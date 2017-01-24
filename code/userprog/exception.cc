@@ -285,17 +285,23 @@ ExceptionHandler (ExceptionType which)
 
           int arg = (int) machine->ReadRegister(4);
           char* filename = copyStringFromMachine(arg,MAX_STRING_SIZE);
-          // bool check = currentThread->space->LegalMove(filename);
-          // if(!check)
-          // {
-          // 	fprintf(stderr,"Opening of an open file is prohibited\n");
-          // 	machine->WriteRegister(2,0);
-          // 	break;
-          // }
-          
-          // currentThread->space->AddFile(filename);
+          bool check = currentThread->space->LegalMove(filename);
+          if(!check)
+          {
+          	fprintf(stderr,"Opening of an open file is prohibited\n");
+          	machine->WriteRegister(2,0);
+          	break;
+          }
 
+          int pos = currentThread->space->AddFile(filename);
+          if(pos<0)
+          {
+            fprintf(stderr, "Max number of files open reached \n" );
+            machine->WriteRegister(2,0);          
+            break;
+          }
           OpenFile* fid =  fileSystem->Open(filename);
+          currentThread->space->AddFileReference(pos, (int)fid);
           int ret = fid==NULL? 0: (int) fid;
           machine->WriteRegister(2,ret);
           
@@ -303,16 +309,15 @@ ExceptionHandler (ExceptionType which)
         }
         case SC_Close:{
           int arg = (int) machine->ReadRegister(4); 
-          // char* filename = copyStringFromMachine(arg,MAX_STRING_SIZE);
-          // bool check = currentThread->space->LegalMove(filename);
-          // if(!check)
-          // {
-          // 	if (currentThread->space->DecrementReference(filename))
-          // 		break;
-          // 	fprintf(stderr,"Removing of an open file is prohibited\n");
-          // 	machine->WriteRegister(2,0);
-          // 	break;
-          // }
+        	if (currentThread->space->DecrementReference(arg))
+        		break;
+          else
+        	{
+            fprintf(stderr,"Removing of an open file is prohibited\n");
+            machine->WriteRegister(2,0);
+            break;
+          }
+          
           bool ret =  fileSystem->Close(arg);
           
           machine->WriteRegister(2,ret);

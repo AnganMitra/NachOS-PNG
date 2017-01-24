@@ -174,7 +174,13 @@ AddrSpace::AddrSpace (OpenFile * executable)
         #ifdef FILESYS
          
          for (int iter=0; iter<10; iter++)
-            workingFiles[iter].inUse=FALSE;  
+            {
+              workingFiles[iter].inUse=FALSE; 
+              workingFiles[iter].name = new char[MAX_STRING_SIZE];
+              workingFiles[iter].name[0] = '\0';
+              workingFiles[iter].reference_count = 0;
+            }
+
         
       
 	       index = new BitMap(10);

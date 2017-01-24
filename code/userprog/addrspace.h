@@ -24,11 +24,13 @@ class Lock;
 class Condition;
 class Semaphore;
 #ifdef FILESYS
+#define MAX_STRING_SIZE 100
 typedef struct 
 FileThreadEntry{
 	bool inUse;
     char* name;
     int reference_count;
+    int fid;
 }FileThreadEntry;
 #endif
 #endif
@@ -67,34 +69,35 @@ class AddrSpace
 		
 		for(int iter = 0; iter<10; iter++)
 		{
-			if((workingFiles[iter].inUse==TRUE) && !strcmp(workingFiles[iter].name, filename) && workingFiles[iter].reference_count >1 )
+			//fprintf(stderr, "here %d %s\n",workingFiles[iter].inUse,workingFiles[iter].name );
+			if((workingFiles[iter].inUse==TRUE) && !strcmp(workingFiles[iter].name, filename)  )
 				return FALSE;
 		}
 		return TRUE;
 		} 
-		bool AddFile(char* filename)
+		int AddFile(char* filename)
 		{
-			
+
 			int pos = index->Find();
 			if(pos==-1)
 			{
 				fprintf(stderr, "Max Thread Count Reached \n");
-				return FALSE;
+				return -1;
 			}
 			
 			workingFiles[pos].inUse = TRUE;
 			strcpy(workingFiles[pos].name, filename);
 			workingFiles[pos].reference_count = 1;
-			return TRUE;
+			return pos;
 			
 		}
-		bool DecrementReference(char* filename)
+		bool DecrementReference(int fid)
 		{
 			
 			for(int iter = 0; iter< 10; iter++)
 			{
 			
-				if((workingFiles[iter].inUse==TRUE) && !strcmp(workingFiles[iter].name, filename)  )
+				if((workingFiles[iter].inUse==TRUE) && workingFiles[iter].fid== fid  )
 				{
 					workingFiles[iter].reference_count --;
 					if(workingFiles[iter].reference_count==0)
@@ -104,6 +107,10 @@ class AddrSpace
 			}
 			return FALSE;
 		
+		}
+
+		void AddFileReference(int pos, int fid){
+			workingFiles[pos].fid = fid;
 		}
 		
 		#endif
