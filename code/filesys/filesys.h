@@ -100,6 +100,7 @@ class FileSystem {
     Directory* FindDirectory(Directory* root, char* path);
     bool CreateDirectory(Directory* root, char* path);
     bool RemoveDirectory(Directory* root, char* path);
+    bool CreateFile(Directory* root, char* path);
      OpenFileTable* oft;
     
     #endif

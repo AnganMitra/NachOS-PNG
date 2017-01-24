@@ -232,7 +232,7 @@ void Terminal()
              path ++;
             if(*path=='/')
              {
-                if(!fileSystem->CreateDirectory (fileSystem->GetRootDirectory(), path))
+                if(!fileSystem->CreateDirectory (fileSystem->GetRootDirectory(), path+1))
                 {
                     fprintf(stderr, "Error in creating \n" );
                 }
@@ -307,6 +307,36 @@ void Terminal()
          
 
         }
+
+        else if (!strncmp(input, "touch", 5))
+        {
+            path = input;
+            while(*path && *path!=' ')
+                path++;
+            if (*path == '\0')
+             {
+                synchconsole->SynchPutString("unspecified path\n");
+                continue;
+             }  
+             path++;
+
+             path ++;
+             if(*path=='/')
+             {
+                if(!fileSystem->CreateFile (fileSystem->GetRootDirectory(), path+1))
+                {
+                    fprintf(stderr, "Error in removing \n" );
+                }
+             }
+            else  if(!fileSystem->CreateFile (tempDirectory,path))
+                {
+                    fprintf(stderr, "Error in removing \n" );
+                }
+            tempDirectory= fileSystem-> GetRootDirectory();
+            fprintf(stderr, "Path reinitialized to root directory /\n" );
+
+        }
+
 
 
 

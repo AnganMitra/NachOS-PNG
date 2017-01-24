@@ -197,6 +197,7 @@ FileSystem::Create(const char *name, int initialSize)
     directory = new Directory(NumDirEntries);
     directory->FetchFrom(directoryFile);
 
+
     if (directory->Find(name) != -1)
       success = FALSE;			// file is already in directory
     else {	
@@ -225,6 +226,10 @@ FileSystem::Create(const char *name, int initialSize)
     delete directory;
     return success;
 }
+
+
+
+
 
 //----------------------------------------------------------------------
 // FileSystem::Open
@@ -474,6 +479,58 @@ FileSystem::CreateDirectory(Directory* root, char* path)
                     delete file;
                     delete newDirectory;
 
+                    root->Flush();
+                    freeMap->WriteBack(freeMapFile);
+                }
+                delete hdr;
+            }
+        }
+        delete freeMap;
+        delete root;
+    }
+
+    return success;
+}
+
+bool
+FileSystem::CreateFile(Directory* root, char* path)
+{
+    BitMap *freeMap;
+    FileHeader *hdr;
+    int sector;
+    bool success;
+
+    DEBUG('f', "Creating directory %s", path);
+
+    root = FindDirectory( root,  path);
+    int i =0, index=0;
+    for (; path[i]; i++)
+        if(path[i] =='/')
+            index = i+1;
+    path = path+index;
+
+    if (root == NULL)
+        success = FALSE;
+    else
+    {
+        if (root->Find(path) != -1)
+            success = FALSE;            // file is already in directory
+        else {  
+            freeMap = new BitMap(NumSectors);
+            freeMap->FetchFrom(freeMapFile);
+            sector = freeMap->Find();   // find a sector to hold the file header
+            if (sector == -1)       
+                success = FALSE;        // no free block for file header 
+            else if (!root->Add(path, sector))
+                success = FALSE;    // no space in directory
+            else {
+                hdr = new FileHeader;
+                if (!hdr->Allocate(freeMap, DirectoryFileSize))
+                    success = FALSE;    // no space on disk for data
+                else {  
+                    success = TRUE;
+                    // everthing worked, flush all changes back to disk
+                    hdr->WriteBack(sector);         
                     root->Flush();
                     freeMap->WriteBack(freeMapFile);
                 }
