@@ -45,6 +45,9 @@
 #define SC_UserThreadJoin 19
 #define SC_ForkExec 20
 
+
+
+
 #ifdef IN_USER_MODE
 
 // LB: This part is read only on compiling the test/*.c files.
@@ -162,19 +165,11 @@ void UserThreadJoin(int tid);
 
 int ForkExec(char* s);
 
+
+
 #endif
 
 #endif // IN_USER_MODE
 
 #endif /* SYSCALL_H */
-/*
-#define SC_PutChar 11
-#define SC_PutString 12
 
-#define SC_GetChar 13
-#define SC_GetString 14
-
-#define SC_PutInt 15
-#define SC_PutInt 16
-
-*/

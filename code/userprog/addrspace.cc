@@ -171,6 +171,15 @@ AddrSpace::AddrSpace (OpenFile * executable)
       unsigned int preallocated = divRoundUp(divRoundUp( noffH.initData.virtualAddr +  noffH.initData.size , PageSize), PAGESPERTHREAD);
       for(i = 0;i<preallocated;i++)
         stackBitMap->Mark(i);
+        #ifdef FILESYS
+         
+         for (int iter=0; iter<10; iter++)
+            workingFiles[iter].inUse=FALSE;  
+        
+      
+	       index = new BitMap(10);
+        #endif
+        
       #endif
 
 }

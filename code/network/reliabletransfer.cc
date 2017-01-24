@@ -4,32 +4,33 @@
 #include "system.h"
 #define TEMP0 100
 #define MAXREEMISSIONS 1500
-static void AlertSenderThread(int param);	
+//static void AlertSenderThread(int param);	
 
 class ReliableTransfer
 {
 public:
 	ReliableTransfer()
 	{
-		mutexlock = new Semaphore("transfer lock", 1);
+		//mutexlock = new Semaphore("transfer lock", 1);
 		reply = 0;
 	}
     bool Send(PacketHeader pktHdr, MailHeader mailHdr, const char *msgData)
     {
-
+	
 	for (int i = 0; i < MAXREEMISSIONS; i++)
 	{
 		
-		postOffice->Send(pktHdr, mailHdr, msgData);
-		interrupt->Schedule(AlertSenderThread, (int)this, TEMP0, NetworkRecvInt);
-		mutexlock->P();
 		if(reply)
 		return TRUE;
+		postOffice->Send(pktHdr, mailHdr, msgData);
+		//interrupt->Schedule(AlertSenderThread, (int)this, TEMP0, NetworkRecvInt);
+		
+		
 
 	}
 	return FALSE;
     }
-	void Receive(int box, PacketHeader *pktHdr, MailHeader *mailHdr,  char *msgData)
+	bool Receive(int box, PacketHeader *pktHdr, MailHeader *mailHdr,  char *msgData)
 	{
 			// Wait for the first message from the other machine
 	postOffice->Receive(box, pktHdr, mailHdr, msgData);
@@ -46,24 +47,32 @@ public:
 	outMailHdr.length = strlen(ack) + 1;
 	postOffice->Send(outPktHdr, outMailHdr, ack);
 	
+	for (int i = 0; i < MAXREEMISSIONS; i++){
 	postOffice->Receive(box, pktHdr, mailHdr, msgData);
 	//printf("Got \"%s\" from %d, box %d\n",buffer,inPktHdr.from,inMailHdr.from);
 	//fflush(stdout);
+	if(!strcmp(msgData, ack))
+	{ 
+		reply=1;
+		return FALSE;
+	}
 	
-	reply=1;
-	mutexlock->V();
+	}
+	return TRUE;
+	
 	
 	
 	}
 	
-	Semaphore* mutexlock;
+	//Semaphore* mutexlock;
 	int reply;
 };
 
-
+/*
 static void AlertSenderThread(int param)
 { 
-	ReliableTransfer *rt = (ReliableTransfer *)param; 
-	rt->mutexlock->V(); 
+	//ReliableTransfer *rt = (ReliableTransfer *)param; 
+	//rt->mutexlock->V(); 
 } 
+*/
 #endif

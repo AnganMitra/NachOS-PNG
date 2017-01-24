@@ -43,6 +43,7 @@
 #ifdef USER_PROGRAM
 #include "machine.h"
 #include "addrspace.h"
+#include <set>
 #endif
 
 // CPU register state to be saved on context switch.  
@@ -73,6 +74,10 @@ extern void ThreadPrint (int arg);
 //    
 //  Some threads also belong to a user address space; threads
 //  that only run in the kernel have a NULL address space.
+
+#ifdef CHANGED
+
+#endif
 
 class Thread
 {
@@ -115,10 +120,13 @@ class Thread
 	printf ("%s, ", name);
     }
     int getThreadID(){
+        if (!strcmp(name, "main"))
+            return 0;
         int tid;
         sscanf(name,"%d",&tid);
         return tid;
     }
+    
     
   private:
     // some of the private data for this class is listed above

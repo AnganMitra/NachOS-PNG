@@ -51,6 +51,13 @@
 #include "filehdr.h"
 #include "filesys.h"
 
+#ifdef FILESYS
+#ifdef CHANGED
+#include "system.h"
+#endif
+#endif
+
+
 // Sectors containing the file headers for the bitmap of free sectors,
 // and the directory of files.  These file headers are placed in well-known 
 // sectors, so that they can be located on boot-up.
@@ -140,6 +147,11 @@ FileSystem::FileSystem(bool format)
         freeMapFile = new OpenFile(FreeMapSector);
         directoryFile = new OpenFile(DirectorySector);
     }
+    
+   #ifdef CHANGED
+    oft = new OpenFileTable(NumDirEntries);
+   
+   #endif
 }
 
 //----------------------------------------------------------------------
@@ -230,16 +242,54 @@ FileSystem::Open(const char *name)
     Directory *directory = new Directory(NumDirEntries);
     OpenFile *openFile = NULL;
     int sector;
-
+	#ifndef CHANGED
     DEBUG('f', "Opening file %s\n", name);
     directory->FetchFrom(directoryFile);
     sector = directory->Find(name); 
+    
     if (sector >= 0) 		
 	openFile = new OpenFile(sector);	// name was found in directory 
     delete directory;
+    
     return openFile;				// return NULL if not found
+    #else
+
+    int ret;
+    ret = oft->FindExisting(currentThread->getThreadID(), name);
+    if(ret)
+    {
+        
+        fprintf(stderr, "Already opened by the thread\n" );
+        return NULL;
+    }
+    
+    ret = oft->FindNewSlot(currentThread->getThreadID(), name);
+  
+    if (ret == -1)
+    	return NULL;
+    else{
+    	DEBUG('f', "Opening file %s\n", name);
+		directory->FetchFrom(directoryFile);
+		sector = directory->Find(name); 
+		
+		if (sector >= 0) 		
+		openFile = new OpenFile(sector);	// name was found in directory 
+		delete directory;
+    
+    	oft->SetSlot(ret, currentThread->getThreadID(), openFile);
+    	return openFile;
+    }
+    #endif
 }
 
+#ifdef CHANGED
+bool
+FileSystem::Close(int fid)
+{
+	return oft->ClearSlot(currentThread->getThreadID(), fid);
+}
+
+#endif
 //----------------------------------------------------------------------
 // FileSystem::Remove
 // 	Delete a file from the file system.  This requires:
@@ -345,21 +395,36 @@ FileSystem::Print()
 Directory* 
 FileSystem::FindDirectory(Directory* root, char* path)
 {
+
     Directory *directory=root;
     OpenFile *file;
     int sector;
+    char* fullpath = new char[200];
+    strcpy(fullpath, path);
+    int j=0, i=0;
+    for(i=0; path[i];i++)
+        {if(path[i] =='/')
+                 break;
+                else 
+                fullpath [j++]= path[i];
+        }
+
+    fullpath[j]='\0';
+   
+    if(fullpath[0]== '\0')
+        return root;
+   sector = directory->Find(fullpath);
+   if (sector == -1 ) {
+       return root;            // file not found 
+   }
+   file = new OpenFile(sector);
+
+   directory = new Directory(NumDirEntries);
+   directory->FetchFrom(file);
 
     
-    sector = directory->Find(path);
-    if (sector == -1 ) {
-        return NULL;            // file not found 
-    }
-    file = new OpenFile(sector);
 
-    directory = new Directory(NumDirEntries);
-    directory->FetchFrom(file);
-    delete file;
-    return directory;
+    return FindDirectory(directory, path+i+1);
 
 }
 bool
@@ -372,7 +437,12 @@ FileSystem::CreateDirectory(Directory* root, char* path)
 
     DEBUG('f', "Creating directory %s", path);
 
-
+    root = FindDirectory( root,  path);
+    int i =0, index=0;
+    for (; path[i]; i++)
+        if(path[i] =='/')
+            index = i+1;
+    path = path+index;
     if (root == NULL)
         success = FALSE;
     else
@@ -424,7 +494,15 @@ FileSystem::RemoveDirectory(Directory* root, char* path)
     BitMap *freeMap;
     OpenFile *file;
     int sector;
-
+    root = FindDirectory( root,  path);
+    int i =0, index=0;
+    for (; path[i]; i++)
+        if(path[i] =='/')
+            index = i+1;
+    path = path+index;
+    char parent[3];
+    strcpy(parent, "..");
+    root= FindDirectory(root, parent);
     
     sector = root->Find(path);
     if (sector == -1 ) {

@@ -67,6 +67,7 @@ class FileSystem {
 #else // FILESYS
 #ifdef CHANGED
 #include "directory.h"
+#include "openfiletable.h"
 #endif
 class FileSystem {
   public:
@@ -89,6 +90,7 @@ class FileSystem {
     void Print();			// List all the files and their contents
 
     #ifdef CHANGED
+    bool Close(int fid);  // close a file
     Directory* GetRootDirectory()
     {
       Directory *directory = new Directory(10);
@@ -98,12 +100,15 @@ class FileSystem {
     Directory* FindDirectory(Directory* root, char* path);
     bool CreateDirectory(Directory* root, char* path);
     bool RemoveDirectory(Directory* root, char* path);
+     OpenFileTable* oft;
+    
     #endif
   private:
    OpenFile* freeMapFile;		// Bit map of free disk blocks,
 					// represented as a file
    OpenFile* directoryFile;		// "Root" directory -- list of 
 					// file names, represented as a file
+					
 };
 
 #endif // FILESYS

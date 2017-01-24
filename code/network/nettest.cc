@@ -166,13 +166,15 @@ void ReliableTransferTest(int farAddr)
 
     ReliableTransfer *reliabletransfer = new ReliableTransfer();
     // Send the first message
-    if (reliabletransfer->Send(outPktHdr, outMailHdr, data))
+    if(farAddr)
+    reliabletransfer->Send(outPktHdr, outMailHdr, data);
+    if (reliabletransfer->Receive(0, &inPktHdr, &inMailHdr, buffer))
         fprintf(stderr, "Message Sent!\n");
     else
         fprintf(stderr,"Unable to send\n");
 
     // Wait for the first message from the other machine
-    reliabletransfer->Receive(0, &inPktHdr, &inMailHdr, buffer);
+    
     printf("Got \"%s\" from %d, box %d\n", buffer, inPktHdr.from, inMailHdr.from);
     fflush(stdout);
 }

@@ -23,6 +23,14 @@
 class Lock;
 class Condition;
 class Semaphore;
+#ifdef FILESYS
+typedef struct 
+FileThreadEntry{
+	bool inUse;
+    char* name;
+    int reference_count;
+}FileThreadEntry;
+#endif
 #endif
 
 
@@ -51,6 +59,55 @@ class AddrSpace
       Semaphore* mutexlock;
       int GetStack();
       void ClearStack(int pos);
+   
+		#ifdef FILESYS
+		FileThreadEntry workingFiles[10]; 
+		BitMap* index;
+		bool LegalMove(char* filename){
+		
+		for(int iter = 0; iter<10; iter++)
+		{
+			if((workingFiles[iter].inUse==TRUE) && !strcmp(workingFiles[iter].name, filename) && workingFiles[iter].reference_count >1 )
+				return FALSE;
+		}
+		return TRUE;
+		} 
+		bool AddFile(char* filename)
+		{
+			
+			int pos = index->Find();
+			if(pos==-1)
+			{
+				fprintf(stderr, "Max Thread Count Reached \n");
+				return FALSE;
+			}
+			
+			workingFiles[pos].inUse = TRUE;
+			strcpy(workingFiles[pos].name, filename);
+			workingFiles[pos].reference_count = 1;
+			return TRUE;
+			
+		}
+		bool DecrementReference(char* filename)
+		{
+			
+			for(int iter = 0; iter< 10; iter++)
+			{
+			
+				if((workingFiles[iter].inUse==TRUE) && !strcmp(workingFiles[iter].name, filename)  )
+				{
+					workingFiles[iter].reference_count --;
+					if(workingFiles[iter].reference_count==0)
+						workingFiles[iter].inUse=FALSE;
+					return TRUE;
+				}
+			}
+			return FALSE;
+		
+		}
+		
+		#endif
+
       #endif
   private:
       TranslationEntry * pageTable;	// Assume linear page table translation
